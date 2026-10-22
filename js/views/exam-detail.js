@@ -6,6 +6,11 @@ import { rerender, go } from '../router.js';
 import { editExam, suggestTopics } from '../forms.js';
 import { chartFigure, lineChart } from '../charts.js';
 import { newTestFor } from './tests.js';
+import { icon } from '../icons.js';
+import { studyQueue } from '../srs.js';
+import { planDialog, planTimelineHtml, planProgress, tickPlanItem, generateCards } from '../study-ui.js';
+import { setAssistant } from '../assistant.js';
+import { ring, toneFor } from '../ui.js';
 
 export async function render(el, { id }) {
   const e = await db.get('exams', id);
@@ -13,7 +18,8 @@ export async function render(el, { id }) {
     el.innerHTML = `<div class="card"><h1>Exam not found</h1><p><a href="#/exams">Back to exams</a></p></div>`;
     return;
   }
-  const [tests, attempts] = await Promise.all([db.getAll('tests'), db.getAll('attempts')]);
+  const [tests, attempts, allCards, plan] = await Promise.all([db.getAll('tests'), db.getAll('attempts'), db.getAll('cards'), db.get('plans', id)]);
+  const cards = allCards.filter((c) => c.examId === id);
   const linked = tests.filter((t) => t.examId === id);
   const myAttempts = attempts.filter((a) => a.byExam?.[id]?.max).sort((a, b) => a.date.localeCompare(b.date));
   const d = hasDate(e.date) ? daysUntil(e.date.date) : null;
@@ -60,7 +66,7 @@ export async function render(el, { id }) {
 
     <section class="card mt" aria-labelledby="h-topics">
       <div class="card-head"><h2 id="h-topics">Topics</h2>
-        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-topics">✨ Suggest with AI</button><button class="btn btn-small" data-act="bulk">Add several</button></div></div>
+        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-topics">✨ Suggest with AI</button><button class="btn btn-small" data-act="bulk">Add several</button><button class="btn btn-small" data-act="weak-cards" title="Generate flashcards for the first weak topic without cards">${icon('cards', 14)} Cards for weak topics</button></div></div>
       <form class="inline-form" data-form="add-topic" style="margin-bottom:.75rem">
         <label class="sr-only" for="new-topic">New topic</label>
         <input id="new-topic" name="name" placeholder="New topic, e.g. Phase diagrams" autocomplete="off">
@@ -68,7 +74,8 @@ export async function render(el, { id }) {
       </form>
       ${e.topics.length ? `<ul class="list">${e.topics.map((t) => `
         <li class="topic-row">
-          <div class="grow"><span class="title">${esc(t.name)}</span>
+          <div class="grow"><a class="title list-link" style="display:inline" href="#/exams/${id}/topics/${t.id}">${esc(t.name)}</a>
+            ${(() => { const tc = cards.filter((c) => c.topicId === t.id); const due = studyQueue(tc).length; return tc.length || t.notes ? `<span class="small muted"> · ${t.notes ? 'notes' : ''}${t.notes && tc.length ? ' · ' : ''}${tc.length ? `${tc.length} cards${due ? `, ${due} due` : ''}` : ''}</span>` : ''; })()}
             <details class="small muted"><summary>History (${t.history?.length || 0})</summary>
               <ul>${(t.history || []).slice().reverse().map((h) => `<li>${fmtDate(h.date)}: ${esc(ratingInfo(h.rating).label)}</li>`).join('')}</ul></details></div>
           <div class="seg" role="group" aria-label="Rating for ${esc(t.name)}">${RATINGS.map((o) => `<button type="button" class="r-${o.color}" data-act="rate" data-id="${t.id}" data-r="${o.id}" aria-pressed="${t.rating === o.id}">${o.id === 'unknown' ? "Don't know" : o.label}</button>`).join('')}</div>
@@ -77,6 +84,14 @@ export async function render(el, { id }) {
             <button class="icon-btn danger" data-act="del-topic" data-id="${t.id}" aria-label="Delete ${esc(t.name)}">✕</button></div>
         </li>`).join('')}</ul>`
       : emptyState('Add your first topic.')}
+    </section>
+
+    <section class="card mt" id="plan" aria-labelledby="h-plan">
+      <div class="card-head"><h2 id="h-plan">${icon('route', 20)} Revision plan</h2>
+        <div class="row-wrap">${plan ? `<span class="small muted">${Math.round(planProgress(plan))}% done</span>` : ''}
+          <button class="btn btn-small ${plan ? '' : 'btn-primary'}" data-act="plan">${plan ? 'Rebuild plan' : 'Build revision plan'}</button></div></div>
+      ${plan ? `${planTimelineHtml(e, plan, { days: 7 })}<details class="mt"><summary class="small">Show the whole plan</summary>${planTimelineHtml(e, plan, { all: true })}</details>`
+        : `<p class="muted small">${e.topics.length ? 'Spread your topics over the days before the exam, weighted towards what you know least, with a mock test at the end.' : 'Add topics first, then build a plan.'}</p>`}
     </section>
 
     <section class="card mt" aria-labelledby="h-tests">
@@ -113,7 +128,37 @@ export async function render(el, { id }) {
     if (name) addTopics([name]).then(() => document.getElementById('new-topic')?.focus());
   });
 
+  setAssistant({
+    key: `exam:${id}`,
+    title: e.title,
+    data: { exam: { title: e.title, module: e.module, type: e.type, date: e.date, formatNotes: e.formatNotes, syllabus: e.syllabus }, topics: e.topics.map((t) => ({ name: t.name, rating: t.rating })), readinessPct: r == null ? null : Math.round(r), practiceScores: examSeries.map(Math.round) },
+    questions: ['What should I revise first?', 'Make me a 2-week revision timetable', 'What kind of questions usually come up for this module?'],
+    actions: [
+      { label: 'Suggest topics', icon: 'book', run: () => el.querySelector('[data-act=ai-topics]')?.click() },
+      { label: 'Build revision plan', icon: 'route', run: () => el.querySelector('[data-act=plan]')?.click() },
+      { label: 'Flashcards for weak topics', icon: 'cards', run: () => el.querySelector('[data-act=weak-cards]')?.click() },
+      { label: 'New practice test', icon: 'test', run: () => el.querySelector('[data-act=new-test]')?.click() },
+    ],
+  });
+
   bind(el, {
+    plan: async () => {
+      if (await planDialog(e)) rerender();
+    },
+    'plan-tick': async (c) => {
+      await tickPlanItem(c.dataset.plan, c.dataset.item, c.checked);
+      rerender();
+    },
+    'weak-cards': async () => {
+      const weak = e.topics.filter((t) => t.rating !== 'confident');
+      if (!weak.length) return toast('No weak topics: everything is rated Confident.');
+      const target = weak.find((t) => !cards.some((c) => c.topicId === t.id)) || weak[0];
+      const n = await generateCards({ exam: e, topic: target });
+      if (n) {
+        toast(`Added ${n} cards for ${target.name}.`);
+        rerender();
+      }
+    },
     edit: async () => (await editExam(e)) && rerender(),
     delete: async () => {
       if (!(await confirmDialog(`Delete “${e.title}” and all its topics? Practice tests stay, but lose their link to this exam.`))) return;

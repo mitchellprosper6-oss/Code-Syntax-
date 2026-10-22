@@ -1,4 +1,8 @@
 import * as db from '../db.js';
+import { skillMinutesOn, skillStreak } from '../model.js';
+import { ring } from '../ui.js';
+import { icon } from '../icons.js';
+import { setAssistant } from '../assistant.js';
 import { loadAll, effectiveLevel, landmarkPct, nextLandmark, landmarksThisMonth, linkedItems, projectProgress, readiness, topicCounts } from '../model.js';
 import { esc, LEVELS, phaseLabel, today, weekStart, fmtMinutes, uid, move } from '../util.js';
 import { bind, progressBar, emptyState, pageHead, openDialog, toast, confirmDialog, readinessMeter } from '../ui.js';
@@ -38,6 +42,13 @@ export async function render(el) {
     ${groups.length ? groups.map(([g, arr]) => `${g ? `<h2 class="subgroup-title">${esc(g)}</h2>` : '<div class="mt"></div>'}<div class="grid">${arr.map((s) => card(s, data, week)).join('')}</div>`).join('')
       : `<div class="mt">${emptyState(`No skills in ${sec.name} yet.`, `<button class="btn btn-primary" data-act="add">+ Add your first skill</button>`)}</div>`}`
     : emptyState('Add a section to start tracking skills.', `<button class="btn" data-act="sections">Manage sections</button>`)}`;
+
+  setAssistant({
+    key: 'skills',
+    title: sec ? `${sec.name} skills` : 'Skills',
+    data: { section: sec?.name, skills: list.map((s) => ({ name: s.name, level: effectiveLevel(s), target: s.targetLevel, next: nextLandmark(s)?.text || null })) },
+    questions: ['Which skill should I prioritise this month?', 'Build me a weekly practice routine for these skills'],
+  });
 
   bind(el, {
     add: async () => {
@@ -79,6 +90,13 @@ function card(s, data, week) {
     <div class="seg level-pick" role="group" aria-label="Current level for ${esc(s.name)}">${LEVELS.map((name, i) => `<button type="button" class="r-accent" data-act="level" data-id="${s.id}" data-l="${i + 1}" aria-pressed="${lvl === i + 1}" title="${name}" aria-label="${i + 1} ${name}">${i + 1}</button>`).join('')}</div>
     <div class="spread small muted" style="margin:.6rem 0 .25rem"><span>${done}/${s.landmarks.length} landmarks</span><span>${Math.round(pct)}%</span></div>
     ${progressBar(pct, { small: true, label: s.name + ' landmarks' })}
+    ${s.dailyTargetMin ? (() => {
+      const m = skillMinutesOn(s);
+      const p = (m / s.dailyTargetMin) * 100;
+      const st = skillStreak(s);
+      return `<div class="habit">${ring(p, { size: 40, stroke: 5, tone: p >= 100 ? 'green' : 'accent', text: p >= 100 ? '✓' : '', label: 'Today' })}
+        <div class="grow small"><strong>${fmtMinutes(m)} / ${fmtMinutes(s.dailyTargetMin)}</strong> today${st ? `<br><span class="streak">${icon('flame', 13)} ${st} day streak</span>` : ''}</div></div>`;
+    })() : ''}
     <p class="small" style="margin:.5rem 0">${next ? `<strong>Next:</strong> ${esc(next.text)}` : s.landmarks.length ? '🎉 All landmarks reached' : '<span class="muted">No landmarks yet</span>'}</p>
     ${linked.projects.length || linked.exams.length ? `<div class="small" style="margin-bottom:.5rem">
       ${linked.projects.map((p) => `<div class="spread"><a href="#/projects/${p.id}">${esc(p.title)}</a><span>${Math.round(projectProgress(p))}%</span></div>`).join('')}

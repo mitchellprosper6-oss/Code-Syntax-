@@ -3,7 +3,7 @@
 Everything is stored in the browser. Nothing is sent to a server, except the optional direct AI mode
 (see the README).
 
-- **IndexedDB** database `tracker-db` (version 1) holds all records and uploaded files.
+- **IndexedDB** database `tracker-db` (version 2) holds all records and uploaded files.
 - **localStorage** holds small per-device settings under `tracker-` keys.
 - All access goes through [`js/db.js`](../js/db.js). No other module touches browser storage.
 
@@ -48,7 +48,7 @@ never read.
 | `category` | Category | |
 | `type` | string | From `meta.lists.examTypes`. |
 | `date` | When | |
-| `topics` | `{id, name, rating, history: {date, at, rating}[]}[]` | `rating` is `"confident" \| "practice" \| "unknown"`. Every change adds a history entry. |
+| `topics` | `{id, name, rating, history: {date, at, rating}[], notes?}[]` | `rating` is `"confident" \| "practice" \| "unknown"`. Every change adds a history entry. `notes` is Markdown study notes (topic page). |
 
 **Readiness** = topics rated Confident ÷ all topics.
 
@@ -102,11 +102,39 @@ The import format is described in [QUESTION_SCHEMA.md](QUESTION_SCHEMA.md).
 | `resources` | `{id, kind, title, url, notes}[]` | |
 | `practice` | `{id, date, minutes, note}[]` | |
 | `quickLog` | `{minutes, note}` | The one-tap log button (drawing skills: 120 min). |
+| `dailyTargetMin` | number | Daily practice target. Shows a ring and streak (drawing skills: 120). 0 = none. |
 | `evidence` | `{id, kind: "project"|"file"|"link", refId, url, note}[]` | |
 | `module` | string | Links Uni Work skills to projects/exams with the same module name. |
 
 **Suggested level** = 1 + round(4 × landmarks reached ÷ landmarks). **Effective level** = `levelOverride ?? suggested`.
 Levels: 1 Beginner, 2 Developing, 3 Competent, 4 Proficient, 5 Advanced.
+
+### `cards` (flashcards, added in v2)
+| Field | Type | Notes |
+|---|---|---|
+| `front`, `back` | string | Question and answer. |
+| `examId`, `topicId` \| `skillId` | string \| null | Which deck the card belongs to. |
+| `due` | date | Next review date. |
+| `interval` | number | Days until the next review. |
+| `ease` | number | SM-2 ease factor (starts at 2.5, min 1.3). |
+| `reps`, `lapses` | number | Successful reviews in a row; times forgotten. |
+| `lastReviewed` | ISO \| null | `null` = new card. |
+| `history` | `{date, g}[]` | Last 30 grades (1 Again, 2 Hard, 3 Good, 4 Easy). Feeds recall % and activity. |
+
+Scheduling (`js/srs.js`): Again resets the card (due today, seen again this session); otherwise intervals grow
+1 → 6 → interval × ease (Hard ×1.2, Easy ×ease×1.3). Up to 20 new cards a day.
+
+### `sessions` (study/focus time, added in v2)
+`{date, minutes, kind: "focus", refType: "project"|"skill"|"topic"|"none", refId, examId?, topicId?, label, mirrored?}`.
+Focus-timer time on a project or skill is also written to that project's log / skill's practice log; those
+session rows have `mirrored: true` so activity isn't counted twice.
+
+### `plans` (revision plans, added in v2; `id` = exam id)
+`{id, examId, settings: {end, perDay, minutes, skipWeekdays[]}, items: {id, date, topicId|null, kind: "learn"|"review"|"mock", minutes, done, doneAt}[]}`.
+Built by `js/planner.js`: each day picks the topics with the highest weight ÷ (1 + sessions so far), weight
+3 for Don't know / 2 Needs practice / 1 Confident, avoiding the same topic on consecutive days. A topic's
+first session is Learn, later ones Review, and the last day is a Mock test. Rebuilding keeps finished
+and past sessions.
 
 ### `sections`
 `{id, key?, name, order, subgroups: string[]}`. Seeded with Code, Design, Uni Work, Machine Learning.
@@ -115,7 +143,7 @@ Levels: 1 Beginner, 2 Developing, 3 Competent, 4 Proficient, 5 Advanced.
 | Key | Value |
 |---|---|
 | `seeded` | Date the seed was loaded (or `"wiped"`). Prevents seeding again. |
-| `schemaVersion` | `1` |
+| `schemaVersion` | `2`. Older data is upgraded on start-up (`migrate()` in `js/backup.js`). |
 | `lastExport` | ISO timestamp of the last export. Drives the 14-day reminder. |
 | `lists` | `{ projectTypes: string[], examTypes: string[] }` |
 
@@ -128,12 +156,14 @@ Levels: 1 Beginner, 2 Developing, 3 Competent, 4 Proficient, 5 Advanced.
 | `tracker-aiApiEnabled` | boolean. Off by default. |
 | `tracker-apiKey` | Your Anthropic key, only if you enter one. |
 | `tracker-aiModel` | Model id for direct mode. |
+| `tracker-timer` | Running focus timer `{mode, minutes, target, endsAt, paused, remaining}`. |
+| `tracker-hideGettingStarted` | boolean |
 
 ## Backup file
 ```json
-{ "app": "tracker", "schemaVersion": 1, "exportedAt": "ISO", "stores": { "projects": [], "exams": [], "files": [], "tests": [], "attempts": [], "skills": [], "sections": [], "meta": [] } }
+{ "app": "tracker", "schemaVersion": 2, "exportedAt": "ISO", "stores": { "projects": [], "exams": [], "files": [], "tests": [], "attempts": [], "skills": [], "sections": [], "meta": [], "cards": [], "sessions": [], "plans": [] } }
 ```
-In the backup, `files[].blob` is a base64 `data:` URL. Import checks `app`, `schemaVersion` and the store
+Version 1 backups (no cards/sessions/plans) still import. In the backup, `files[].blob` is a base64 `data:` URL. Import checks `app`, `schemaVersion` and the store
 names, then replaces all data. The API key and other localStorage settings are never exported.
 
 ## Seed

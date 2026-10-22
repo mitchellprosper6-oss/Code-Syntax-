@@ -5,6 +5,13 @@ import { bind, progressBar, emptyState, formModal, confirmDialog, toast, readine
 import { rerender, go } from '../router.js';
 import { editSkill, resourceFields, practiceFields, suggestLandmarks, suggestResources, slimSkill } from '../forms.js';
 import { chartFigure, barChart } from '../charts.js';
+import { icon } from '../icons.js';
+import { setAssistant } from '../assistant.js';
+import { skillMinutesOn, skillStreak } from '../model.js';
+import { ring } from '../ui.js';
+import { cardListHtml, cardHandlers, addCard, generateCards, cardStats } from '../study-ui.js';
+import { studyQueue } from '../srs.js';
+import { openTimer } from '../timer.js';
 
 export async function render(el, { id }) {
   const s = await db.get('skills', id);
@@ -12,7 +19,9 @@ export async function render(el, { id }) {
     el.innerHTML = `<div class="card"><h1>Skill not found</h1><p><a href="#/skills">Back to skills</a></p></div>`;
     return;
   }
-  const [sections, projects, exams, files] = await Promise.all(['sections', 'projects', 'exams', 'files'].map((x) => db.getAll(x)));
+  const [sections, projects, exams, files, allCards] = await Promise.all(['sections', 'projects', 'exams', 'files', 'cards'].map((x) => db.getAll(x)));
+  const cards = allCards.filter((c) => c.skillId === id);
+  const cs = cardStats(cards);
   const section = sections.find((x) => x.id === s.sectionId);
   const lvl = effectiveLevel(s);
   const sug = suggestedLevel(s);
@@ -52,7 +61,15 @@ export async function render(el, { id }) {
     <header class="page-head"><div>
         <div class="tags"><span class="tag">${esc(phaseLabel(s.phase))}</span>${s.subgroup ? `<span class="tag">${esc(s.subgroup)}</span>` : ''}</div>
         <h1 style="margin-top:.35rem">${esc(s.name)}</h1></div>
-      <div class="page-actions"><button class="btn" data-act="edit">Edit</button><button class="btn btn-danger" data-act="delete">Delete</button></div></header>
+      <div class="page-actions"><button class="btn" data-act="practise">${icon('timer', 16)} Practise now</button><button class="btn" data-act="edit">Edit</button><button class="btn btn-danger" data-act="delete">Delete</button></div></header>
+    ${s.dailyTargetMin ? (() => {
+      const m = skillMinutesOn(s);
+      const p = (m / s.dailyTargetMin) * 100;
+      const st = skillStreak(s);
+      return `<div class="habit" style="margin-bottom:1rem">${ring(p, { size: 52, stroke: 6, tone: p >= 100 ? 'green' : 'accent', label: 'Today' })}
+        <div class="grow"><strong>${fmtMinutes(m)} of ${fmtMinutes(s.dailyTargetMin)} today</strong>${st ? ` · <span class="streak">${icon('flame', 14)} ${st} day streak</span>` : ''}<br><span class="small muted">Daily target. Change it with Edit.</span></div>
+        ${p < 100 ? `<button class="btn btn-primary btn-small" data-act="quick">+ ${fmtMinutes(s.quickLog.minutes)}</button>` : ''}</div>`;
+    })() : ''}
 
     <div class="grid-2">
       <section class="card" aria-labelledby="h-level">
@@ -90,6 +107,13 @@ export async function render(el, { id }) {
           <button class="icon-btn" data-act="lm-edit" data-id="${l.id}" aria-label="Edit landmark">✎</button>
           <button class="icon-btn danger" data-act="lm-del" data-id="${l.id}" aria-label="Delete landmark">✕</button></div></li>`).join('')}</ol>`
       : emptyState('Add your first landmark.')}
+    </section>
+
+    <section class="card mt" aria-labelledby="h-cards">
+      <div class="card-head"><h2 id="h-cards">${icon('cards', 20)} Flashcards</h2>
+        <div class="row-wrap">${cs.total ? `<a class="btn btn-small btn-primary" href="#/study/review?skill=${id}">${studyQueue(cards).length ? `Review (${studyQueue(cards).length})` : 'Practise'}</a>` : ''}
+          <button class="btn btn-small" data-act="add-card">${icon('plus', 14)} Add</button><button class="btn btn-small btn-ai" data-act="gen-cards">${icon('sparkles', 14)} Generate</button></div></div>
+      ${cs.total ? `<details><summary class="small">${cs.total} cards · ${cs.mastered} mastered</summary>${cardListHtml(cards)}</details>` : '<p class="muted small">Useful for shortcuts, commands, syntax, standards (e.g. BS 8888 conventions) and theory.</p>'}
     </section>
 
     ${linked.projects.length || linked.exams.length ? `<section class="card mt" aria-labelledby="h-linked">
@@ -140,7 +164,25 @@ export async function render(el, { id }) {
     l.doneAt = done ? today() : null;
   });
 
+  setAssistant({
+    key: `skill:${id}`,
+    title: s.name,
+    data: { skill: slimSkill(s), practiceLast14Days: s.practice.filter((p) => p.date >= weeks[6]).map((p) => ({ date: p.date, minutes: p.minutes, note: p.note })) },
+    questions: ['What should I practise this week?', 'Give me a 30-minute practice exercise', 'How do I get from my level to my target?'],
+    actions: [
+      { label: 'Suggest landmarks', icon: 'target', run: () => el.querySelector('[data-act=ai-lm]')?.click() },
+      { label: 'Suggest resources', icon: 'book', run: () => el.querySelector('[data-act=ai-res]')?.click() },
+      { label: 'Plan next steps', icon: 'route', run: () => el.querySelector('[data-act=edit-plan]')?.click() },
+      { label: 'Make flashcards', icon: 'cards', run: () => el.querySelector('[data-act=gen-cards]')?.click() },
+    ],
+    onSave: { label: 'Add to action notes', run: async (text) => { await db.update('skills', id, (r) => { r.actionNotes = r.actionNotes ? `${r.actionNotes}\n\n${text}` : text; }); rerender(); } },
+  });
+
   bind(el, {
+    practise: () => openTimer({ type: 'skill', id, label: s.name }),
+    'add-card': async () => (await addCard({ skillId: id, context: { skill: s.name } })) && rerender(),
+    'gen-cards': async () => (await generateCards({ skill: s })) && rerender(),
+    ...cardHandlers(cards, rerender),
     edit: async () => (await editSkill(s)) && rerender(),
     delete: async () => {
       if (!(await confirmDialog(`Delete “${s.name}” with its landmarks, practice log, resources and evidence?`))) return;

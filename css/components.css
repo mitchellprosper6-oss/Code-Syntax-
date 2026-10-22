@@ -292,3 +292,4 @@ tbody tr:hover td { background: color-mix(in srgb, var(--surface-2) 60%, transpa
   .q { break-inside: avoid; }
   a { color: #000; text-decoration: none; }
 }
+.list-link.title + br, a.list-link + br { display: none; }

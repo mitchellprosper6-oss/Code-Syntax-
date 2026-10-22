@@ -2,7 +2,7 @@ import * as db from '../db.js';
 import { newTopic } from '../model.js';
 import { esc, move, kindLabel, QUESTION_KINDS, uid } from '../util.js';
 import { bind, emptyState, formModal, confirmDialog, toast, openDialog, alertDialog } from '../ui.js';
-import { rerender, go } from '../router.js';
+import { rerender, go, query } from '../router.js';
 import { testFields } from './tests.js';
 import { totalMarks, importQuestions, QUESTION_JSON_SCHEMA, questionInstructions } from '../questions.js';
 import { aiDialog } from '../ai.js';
@@ -161,18 +161,27 @@ export async function render(el, { id }) {
     },
     generate: () => generate(t, exam, files),
   });
+
+  // Opened from a topic page with ?generate=1: jump straight into question generation.
+  const q = query();
+  if (q.get('generate')) {
+    history.replaceState(null, '', `#/tests/${id}/edit`);
+    generate(t, exam, files, q.get('topic') || '');
+  }
 }
 
 /** Pick files + options, then run the AI dialog and import the questions. */
-async function generate(test, exam, files) {
+async function generate(test, exam, files, focusTopic = '') {
   const withText = files.filter((f) => f.extractedText);
-  if (!withText.length) {
+  if (!withText.length && !focusTopic) {
     if (await confirmDialog('You have no files with text yet. Upload notes on Practice Tests → Files first.', { ok: 'Go to Files', danger: false, title: 'No files' })) go('#/tests?tab=files');
     return;
   }
   const { dlg, close, done } = openDialog(
     `<form class="modal-body"><h2 class="modal-title">Generate questions</h2>
-      <fieldset class="field"><legend>Files to use</legend>
+      <div class="field"><label for="g-focus">Focus on topic (optional)</label><input id="g-focus" name="focus" value="${esc(focusTopic)}" placeholder="e.g. Phase diagrams"></div>
+      <fieldset class="field"><legend>Files to use <span class="muted small">(optional — without files Claude uses the exam and topic)</span></legend>
+        ${withText.length ? '' : '<p class="small muted">No files yet. Upload notes on Practice Tests → Files for questions based on your own material.</p>'}
         ${withText.map((f) => `<label class="inline" style="display:flex;margin:.3rem 0"><input type="checkbox" name="f" value="${f.id}"> ${esc(f.name)} <span class="small muted">(${f.extractedText.length.toLocaleString()} chars)</span></label>`).join('')}
       </fieldset>
       <div class="field"><label for="g-n">How many questions</label><input id="g-n" name="n" type="number" min="1" max="50" value="10"></div>
@@ -190,12 +199,12 @@ async function generate(test, exam, files) {
     const ids = [...f.querySelectorAll('[name=f]:checked')].map((x) => x.value);
     const kinds = [...f.querySelectorAll('[name=k]:checked')].map((x) => x.value);
     const err = f.querySelector('.form-error');
-    if (!ids.length || !kinds.length) {
-      err.textContent = 'Choose at least one file and one question kind.';
+    if (!kinds.length || (!ids.length && !f.elements.focus.value.trim() && !exam)) {
+      err.textContent = !kinds.length ? 'Choose at least one question kind.' : 'Choose a file, or give a topic to focus on.';
       err.hidden = false;
       return;
     }
-    close({ ids, kinds, n: Math.max(1, Math.min(50, +f.elements.n.value || 10)), createTopics: f.elements.topics.checked });
+    close({ ids, kinds, n: Math.max(1, Math.min(50, +f.elements.n.value || 10)), createTopics: f.elements.topics.checked, focus: f.elements.focus.value.trim() });
   });
   const opts = await done;
   if (!opts) return;
@@ -203,11 +212,12 @@ async function generate(test, exam, files) {
   const result = await aiDialog({
     title: 'Generate questions',
     about: 'Write practice questions for my exam revision.',
-    instructions: questionInstructions({ count: opts.n, kinds: opts.kinds, exam }) +
-      '\n\nSOURCE MATERIAL:\n' + chosen.map((f) => `===== FILE: ${f.name} =====\n${f.extractedText}`).join('\n\n'),
+    instructions: questionInstructions({ count: opts.n, kinds: opts.kinds, exam, hasSource: chosen.length > 0, focus: opts.focus }) +
+      (chosen.length ? '\n\nSOURCE MATERIAL:\n' + chosen.map((f) => `===== FILE: ${f.name} =====\n${f.extractedText}`).join('\n\n') : ''),
     context: exam ? { exam: { title: exam.title, module: exam.module, type: exam.type } } : null,
     schema: QUESTION_JSON_SCHEMA,
-    placeholder: 'Optional: focus areas, difficulty, style (e.g. "exam-style, focus on phase diagrams")',
+    placeholder: 'Optional: difficulty or style (e.g. "exam-style, include unit conversions")',
+    quick: ['Exam-style, mixed difficulty', 'Mostly calculations', 'Quick-fire definitions'],
     parse: (json) => importQuestions(json, { exam, files: chosen, createTopics: opts.createTopics }),
   });
   if (!result) return;
