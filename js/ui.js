@@ -6,9 +6,9 @@ import { esc, CATEGORIES, catLabel, ratingInfo, clamp } from './util.js';
 let dialogCount = 0;
 
 /** Open a <dialog> with given inner HTML. Returns {dlg, close(result), done: Promise}. */
-export function openDialog(html, { wide = false, label = 'Dialog' } = {}) {
+export function openDialog(html, { wide = false, label = 'Dialog', sheet = false, palette = false } = {}) {
   const dlg = document.createElement('dialog');
-  dlg.className = 'modal' + (wide ? ' modal-wide' : '');
+  dlg.className = 'modal' + (wide ? ' modal-wide' : '') + (sheet ? ' modal-sheet' : '') + (palette ? ' modal-palette' : '');
   dlg.setAttribute('aria-label', label);
   dlg.innerHTML = html;
   document.body.appendChild(dlg);
@@ -27,6 +27,7 @@ export function openDialog(html, { wide = false, label = 'Dialog' } = {}) {
   });
   dlg.addEventListener('click', (e) => {
     if (e.target.closest('[data-close]')) close(null);
+    else if (e.target === dlg) close(null); // click on the backdrop
   });
   dlg.showModal();
   const first = dlg.querySelector('[autofocus], input:not([type=hidden]):not([type=checkbox]), textarea, select');
@@ -153,10 +154,11 @@ export function writeFields(form, fields, values) {
 }
 
 export function formModal({ title, fields, values = {}, submitLabel = 'Save', ai = {}, wide = false, intro = '' }) {
+  const sparkle = '<svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>';
   const { dlg, close, done } = openDialog(
     `<form class="modal-body" novalidate>
       <div class="modal-head"><h2 class="modal-title">${esc(title)}</h2>
-        ${ai ? `<button type="button" class="btn btn-ai btn-small" data-ai>✨ Fill with AI</button>` : ''}</div>
+        ${ai ? `<button type="button" class="btn btn-ai btn-small" data-ai>${sparkle} Fill with AI</button>` : ''}</div>
       ${intro ? `<p class="muted">${esc(intro)}</p>` : ''}
       ${fields.map((f) => fieldHtml(f, values[f.name])).join('')}
       <p class="form-error" role="alert" hidden></p>
@@ -184,7 +186,7 @@ export function formModal({ title, fields, values = {}, submitLabel = 'Save', ai
     dlg.querySelector('[data-ai]').addEventListener('click', async () => {
       const { aiFillFields } = await import('./ai.js');
       const current = readFields(form, fields);
-      const res = await aiFillFields({ title, fields, current, about: ai.about || title, context: ai.context });
+      const res = await aiFillFields({ title, fields, current, about: ai.about || title, context: ai.context, quick: ai.quick });
       if (res) {
         writeFields(form, fields, res);
         toast('AI suggestions filled in. Check them, then Save.');
@@ -223,6 +225,21 @@ export function readinessMeter(counts, { showLegend = true } = {}) {
       <span><i class="dot dot-amber"></i>Needs practice ${counts.practice}</span>
       <span><i class="dot dot-red"></i>Don't know ${counts.unknown}</span></div>` : ''}`;
 }
+
+/** Circular progress ring. tone: accent | green | amber | red */
+export function ring(pct, { size = 64, stroke = 7, label = '', tone = 'accent', text } = {}) {
+  const p = pct == null ? 0 : clamp(Math.round(pct), 0, 100);
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return `<div class="ring ring-${tone}" style="width:${size}px;height:${size}px" role="img" aria-label="${esc(label || 'Progress')} ${pct == null ? 'not started' : p + '%'}">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+      <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}" class="ring-track"/>
+      <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke-width="${stroke}" class="ring-fill" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p / 100)}" transform="rotate(-90 ${size / 2} ${size / 2})"/>
+    </svg><span class="ring-text">${text ?? (pct == null ? '–' : p + '%')}</span></div>`;
+}
+
+export const toneFor = (pct) => (pct == null ? 'accent' : pct >= 70 ? 'green' : pct >= 40 ? 'amber' : 'red');
 
 export function emptyState(text, actionHtml = '') {
   return `<div class="empty"><p>${esc(text)}</p>${actionHtml}</div>`;

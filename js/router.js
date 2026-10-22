@@ -27,12 +27,14 @@ async function render({ keepScroll = false } = {}) {
   const hit = match(path) || match('/404');
   const y = window.scrollY;
   current = hit;
-  document.querySelectorAll('[data-nav]').forEach((a) => {
-    const base = a.getAttribute('href').slice(1);
-    const active = base === '/' ? path === '/' : path === base || path.startsWith(base + '/') || (a.dataset.also || '').split(' ').some((p) => p && path.startsWith(p));
-    if (active) a.setAttribute('aria-current', 'page');
+  const under = (p) => (p === '/' ? path === '/' : path === p || path.startsWith(p + '/'));
+  document.querySelectorAll('[data-nav], .more-btn').forEach((a) => {
+    const base = a.getAttribute('href')?.slice(1);
+    const also = (a.dataset.also || '').split(' ').filter(Boolean);
+    if ((base && under(base)) || also.some(under)) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
+  window.dispatchEvent(new CustomEvent('tracker:route', { detail: { path } }));
   try {
     const mod = await hit.r.load();
     if (current !== hit) return; // a newer navigation won
