@@ -4,7 +4,10 @@ import * as db from './db.js';
 import { formModal, toast } from './ui.js';
 import { CATEGORIES, PROJECT_STATUSES, PHASES, LEVELS, RESOURCE_KINDS, today } from './util.js';
 import { newProject, newExam, newSkill, getLists, defaultLevelDescriptions, newTask, newCriterion, newLandmark } from './model.js';
-import { aiSuggestList } from './ai.js';
+import { aiSuggestList, aiFillFields, aiText } from './ai.js';
+import { openDialog } from './ui.js';
+import { icon } from './icons.js';
+import { newCard } from './srs.js';
 
 const opts = (arr) => arr.map((x) => (typeof x === 'string' ? { value: x, label: x } : { value: x.id, label: x.label }));
 const withCurrent = (list, v) => (v && !list.includes(v) ? [...list, v] : list);
@@ -30,7 +33,7 @@ export async function editProject(existing = null, prefill = {}) {
     title: existing ? 'Edit project' : 'Add project',
     fields,
     values: { ...base, ...prefill },
-    ai: { about: 'a uni/work/personal project or coursework with a deadline' },
+    ai: { about: 'a uni/work/personal project or coursework with a deadline', quick: ['Write a clear description from my brief', 'Uni coursework due in 3 weeks', 'Personal project, no fixed deadline'] },
   });
   if (!v) return null;
   const saved = await db.put('projects', { ...base, ...v });
@@ -59,7 +62,7 @@ export async function editExam(existing = null, prefill = {}) {
     title: existing ? 'Edit exam' : 'Add exam',
     fields,
     values: { ...base, ...prefill },
-    ai: { about: 'an exam, test or quiz' },
+    ai: { about: 'an exam, test or quiz', quick: ['Summarise this syllabus into format notes', 'In-person quiz, date to be confirmed'] },
   });
   if (!v) return null;
   const saved = await db.put('exams', { ...base, ...v });
@@ -81,6 +84,7 @@ export async function skillFields() {
     { name: 'goals', label: 'Future goals', type: 'textarea', help: 'Where you want this skill to be, and by when' },
     { name: 'actionNotes', label: 'What to do next (action notes)', type: 'textarea' },
     { name: 'module', label: 'Linked uni module (optional)', help: 'Exact module name, to link its projects and exams' },
+    { name: 'dailyTargetMin', label: 'Daily practice target (minutes, 0 = none)', type: 'number', min: 0, max: 600, help: 'Shows a daily ring and streak, e.g. 120 for drawing' },
     { name: 'quickMinutes', label: 'One-tap log: minutes', type: 'number', min: 1, max: 600 },
     { name: 'quickNote', label: 'One-tap log: note', placeholder: 'Practice session' },
   ];
@@ -103,6 +107,7 @@ export async function editSkill(existing = null, prefill = {}) {
     values,
     ai: {
       about: 'a skill I am learning. Estimate my current level 1–5 only from what I describe.',
+      quick: ['Set my level from what I can already do', 'Write goals for the next 3 months', 'Suggest what to do next this week'],
       context: { landmarks: base.landmarks.map((l) => ({ text: l.text, done: l.done })) },
     },
   });
@@ -112,6 +117,7 @@ export async function editSkill(existing = null, prefill = {}) {
     ...base,
     ...rest,
     targetLevel: Number(targetLevel) || 3,
+    dailyTargetMin: rest.dailyTargetMin || 0,
     quickLog: { minutes: quickMinutes || 30, note: quickNote || 'Practice session' },
   };
   if (level) {
@@ -245,3 +251,71 @@ export function slimSkill(s) {
 }
 
 export const todayValue = () => ({ date: today() });
+
+// ---------- quick add ----------
+/** Pick a type, let Claude fill the form from a description, then open the normal form to review. */
+export async function quickAddWithAI() {
+  const { dlg, close, done } = openDialog(
+    `<div class="modal-body"><div class="modal-head"><h2 class="modal-title"><span class="ai-badge">${icon('sparkles', 18)}</span> Quick add with AI</h2>
+      <button class="icon-btn" data-close aria-label="Close">${icon('x')}</button></div>
+      <p class="muted">What are you adding? Describe it in your own words next; Claude fills in the form and you check it before saving.</p>
+      <div class="action-grid">
+        <button class="action-tile" data-t="project">${icon('folder', 20)}<span>Project / deadline</span></button>
+        <button class="action-tile" data-t="exam">${icon('cap', 20)}<span>Exam / test</span></button>
+        <button class="action-tile" data-t="skill">${icon('zap', 20)}<span>Skill / goal</span></button>
+      </div></div>`,
+    { label: 'Quick add with AI' }
+  );
+  dlg.querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => close(b.dataset.t)));
+  const type = await done;
+  if (!type) return null;
+  const fields = type === 'project' ? await projectFields() : type === 'exam' ? await examFields() : await skillFields();
+  const about = { project: 'a new project/coursework/deadline', exam: 'a new exam, test or quiz', skill: 'a new skill with my current level, goals and next steps' }[type];
+  const placeholder = {
+    project: 'e.g. Thermodynamics lab report, 2000 words, due 3 Dec, Uni',
+    exam: 'e.g. Statics class test on 20 Nov, 1 hour, calculator allowed',
+    skill: 'e.g. I want to learn Blender for product renders; I know the basics of modelling',
+  }[type];
+  const values = await aiFillFields({ title: `New ${type}`, fields, current: {}, about, quick: [placeholder.replace(/^e\.g\. /, '')] });
+  if (!values) return null;
+  const saved = type === 'project' ? await editProject(null, values) : type === 'exam' ? await editExam(null, values) : await editSkill(null, values);
+  if (saved) location.hash = `#/${type === 'skill' ? 'skills' : type + 's'}/${saved.id}`;
+  return saved;
+}
+
+// ---------- flashcards & study ----------
+export const cardFields = () => [
+  { name: 'front', label: 'Front (question / prompt)', type: 'textarea', rows: 3, required: true },
+  { name: 'back', label: 'Back (answer)', type: 'textarea', rows: 4, required: true },
+];
+
+/** AI flashcards for an exam topic or a skill. Returns new card records (not saved). */
+export async function suggestCards({ exam = null, topic = null, skill = null, sourceText = '', count = 12 }) {
+  const about = topic
+    ? `Write ${count} high-quality flashcards for the topic "${topic.name}" in "${exam.title}" (${exam.module || 'module'}).`
+    : `Write ${count} high-quality flashcards for learning the skill "${skill.name}".`;
+  const items = await aiSuggestList({
+    title: 'Make flashcards',
+    about,
+    instructions: 'One fact or idea per card. Front: a specific question (not just a term). Back: a short, complete answer (formulas welcome, use plain text like sigma = E * epsilon). Cover definitions, formulas with units, cause/effect and common mistakes.' +
+      (sourceText ? '\n\nBase the cards ONLY on this source material:\n' + sourceText : ''),
+    context: topic ? { exam: exam.title, module: exam.module, syllabus: exam.syllabus, topic: topic.name, notes: (topic.notes || '').slice(0, 8000) } : { skill: slimSkill(skill) },
+    itemFields: cardFields(),
+    quick: ['Focus on formulas and units', 'Exam-style definitions', 'Common mistakes to avoid', 'Make them harder'],
+    placeholder: 'Optional: what to focus on',
+  });
+  return items.map((v) => newCard({ front: v.front, back: v.back, examId: exam?.id || null, topicId: topic?.id || null, skillId: skill?.id || null }));
+}
+
+/** AI study guide (Markdown) for a topic. Returns text or null. */
+export function studyGuide(exam, topic, sourceText = '') {
+  return aiText({
+    title: `Study guide: ${topic.name}`,
+    about: `Write a clear, in-depth study guide for the topic "${topic.name}" for my ${exam.type || 'exam'} "${exam.title}" (${exam.module || ''}).`,
+    instructions: 'Structure: ## Overview (2–3 sentences), ## Key ideas (bullets), ## Formulas & units (if any, with what each symbol means), ## Worked example (step by step), ## Common mistakes, ## Check yourself (5 short questions with answers at the end). Pitch it at first/second-year engineering undergraduate level.' +
+      (sourceText ? '\n\nUse my notes below as the main source:\n' + sourceText : ''),
+    context: { exam: exam.title, module: exam.module, syllabus: exam.syllabus, formatNotes: exam.formatNotes, currentNotes: (topic.notes || '').slice(0, 6000) },
+    quick: ['Explain it simply, like I’m new to it', 'Focus on exam technique', 'More worked examples', 'Make it a one-page summary'],
+    placeholder: 'Optional: anything to focus on or that confuses you',
+  });
+}

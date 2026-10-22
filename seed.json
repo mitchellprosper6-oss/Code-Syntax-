@@ -67,9 +67,9 @@
       "Parametric sketches and bodies", "Components and joints", "Drawings", "Rendering", "CAM or 3D-print a part", "Simulation or generative design study"] },
     { "name": "Ansys (simulation)", "section": "design", "subgroup": "CAD & Simulation", "phase": "unset", "landmarks": [
       "Geometry import and clean-up", "Meshing and mesh quality", "Static structural FEA with loads and supports", "Interpret results and check against hand calculations", "Modal or thermal analysis", "CFD basics (Fluent)"] },
-    { "name": "Hand drawing for engineering design", "section": "design", "subgroup": "Drawing", "phase": "ongoing", "quickLogMinutes": 120, "quickLogNote": "Drawing session", "landmarks": [
+    { "name": "Hand drawing for engineering design", "section": "design", "subgroup": "Drawing", "phase": "ongoing", "quickLogMinutes": 120, "quickLogNote": "Drawing session", "dailyTargetMin": 120, "landmarks": [
       "Line weights and construction lines", "First-angle orthographic projection", "Isometric", "Sectional views", "Dimensioning", "Annotated design sheets for a real project"] },
-    { "name": "Hand drawing for product design", "section": "design", "subgroup": "Drawing", "phase": "ongoing", "quickLogMinutes": 120, "quickLogNote": "Drawing session", "landmarks": [
+    { "name": "Hand drawing for product design", "section": "design", "subgroup": "Drawing", "phase": "ongoing", "quickLogMinutes": 120, "quickLogNote": "Drawing session", "dailyTargetMin": 120, "landmarks": [
       "1- and 2-point perspective", "Ellipses and cylinders", "Form and shading", "Exploded views", "Ideation sheets", "Presentation render"] },
     { "name": "Design Thinking", "section": "design", "subgroup": "Design process", "phase": "unset", "landmarks": [
       "Empathise (user research, interviews)", "Define (problem statement, personas)", "Ideate (divergent sketching, SCAMPER)", "Prototype (low-fidelity models)", "Test and iterate with users", "Full double-diamond case study for my portfolio"] },

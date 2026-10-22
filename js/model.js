@@ -39,7 +39,7 @@ export const newSkill = (v = {}) => {
     name: '', sectionId: null, subgroup: '', phase: 'unset',
     levelOverride: null, levelSet: false, targetLevel: 3, levelDescriptions: null,
     landmarks: [], actionNotes: '', goals: '', resources: [], practice: [],
-    quickLog: { minutes: 30, note: 'Practice session' }, evidence: [], module: '',
+    quickLog: { minutes: 30, note: 'Practice session' }, dailyTargetMin: 0, evidence: [], module: '',
     ...v,
   };
   if (!s.levelDescriptions) s.levelDescriptions = defaultLevelDescriptions(s.landmarks);
@@ -146,8 +146,8 @@ export function upcoming(projects, exams) {
 }
 
 export async function loadAll() {
-  const [projects, exams, tests, attempts, skills, sections, files] = await Promise.all(
-    ['projects', 'exams', 'tests', 'attempts', 'skills', 'sections', 'files'].map((s) => db.getAll(s))
+  const [projects, exams, tests, attempts, skills, sections, files, cards, sessions, plans] = await Promise.all(
+    ['projects', 'exams', 'tests', 'attempts', 'skills', 'sections', 'files', 'cards', 'sessions', 'plans'].map((s) => db.getAll(s))
   );
   sections.sort((a, b) => a.order - b.order);
   attempts.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
@@ -155,7 +155,7 @@ export async function loadAll() {
   projects.sort(byTitle);
   exams.sort(byTitle);
   skills.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
-  return { projects, exams, tests, attempts, skills, sections, files };
+  return { projects, exams, tests, attempts, skills, sections, files, cards, sessions, plans };
 }
 
 /** Exam id + topic id → names. */
@@ -166,4 +166,52 @@ export function topicName(exams, examId, topicId) {
 
 export async function getLists() {
   return db.getMeta('lists', { projectTypes: ['Coursework', 'Project report', 'Personal project'], examTypes: ['In-person quiz', 'Test', 'Exam'] });
+}
+
+// ---------- activity, streaks ----------
+/** Minutes and actions per date from every source. Returns Map(date -> {minutes, actions}). */
+export function activityByDate({ sessions = [], skills = [], projects = [], cards = [], attempts = [] }) {
+  const m = new Map();
+  const add = (d, minutes = 0, actions = 1) => {
+    if (!d) return;
+    const cur = m.get(d) || { minutes: 0, actions: 0 };
+    cur.minutes += minutes || 0;
+    cur.actions += actions;
+    m.set(d, cur);
+  };
+  for (const s of sessions) if (!s.mirrored) add(s.date, s.minutes);
+  for (const s of skills) for (const p of s.practice) add(p.date, p.minutes);
+  for (const p of projects) for (const l of p.log) add(l.date, l.minutes);
+  for (const c of cards) for (const h of c.history || []) add(h.date, 0.5, 1);
+  for (const a of attempts) add(a.date, Math.round((a.durationSec || 0) / 60));
+  return m;
+}
+
+export function streak(activity) {
+  let n = 0;
+  const d = new Date();
+  const key = () => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  if (!activity.has(key())) d.setDate(d.getDate() - 1); // today not done yet: streak still alive from yesterday
+  while (activity.has(key())) {
+    n++;
+    d.setDate(d.getDate() - 1);
+  }
+  return n;
+}
+
+/** Minutes of practice for a skill on a date. */
+export const skillMinutesOn = (s, d = today()) => s.practice.filter((p) => p.date === d).reduce((m, p) => m + (p.minutes || 0), 0);
+
+/** Consecutive days a skill met its daily target (today counts once met). */
+export function skillStreak(s) {
+  if (!s.dailyTargetMin) return 0;
+  const days = new Map();
+  for (const p of s.practice) days.set(p.date, (days.get(p.date) || 0) + (p.minutes || 0));
+  const hit = new Set([...days].filter(([, m]) => m >= s.dailyTargetMin).map(([d]) => d));
+  return streak(new Map([...hit].map((d) => [d, 1])));
+}
+
+export function topicById(exams, examId, topicId) {
+  const exam = exams.find((e) => e.id === examId);
+  return { exam, topic: exam?.topics.find((t) => t.id === topicId) };
 }
