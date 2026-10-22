@@ -154,12 +154,15 @@ export function suggestRating(pct, current) {
 }
 
 /** Prompt instructions for generating questions from file text. */
-export function questionInstructions({ count, kinds, exam }) {
+export function questionInstructions({ count, kinds, exam, hasSource = true, focus = '' }) {
   return [
-    `Write ${count} practice questions based ONLY on the source material below.`,
+    hasSource
+      ? `Write ${count} practice questions based ONLY on the source material below.`
+      : `Write ${count} practice questions for ${exam ? `"${exam.title}" (${exam.module || 'engineering'})` : 'this exam'} at first/second-year engineering undergraduate level.`,
+    focus ? `Focus on the topic: "${focus}". Tag every question with this topic name.` : '',
     `Use these question kinds: ${kinds.join(', ')}.`,
     'Mix difficulty. For numerical questions give a sensible tolerance. Every question needs a full model answer with marking points.',
-    exam?.topics?.length ? `Tag each question with one of these topic names where it fits: ${exam.topics.map((t) => `"${t.name}"`).join(', ')}. If none fit, give a short new topic name.` : 'Tag each question with a short topic name.',
-    'Set sourceFile to the file name the question came from.',
-  ].join('\n');
+    !focus && exam?.topics?.length ? `Tag each question with one of these topic names where it fits: ${exam.topics.map((t) => `"${t.name}"`).join(', ')}. If none fit, give a short new topic name.` : !focus ? 'Tag each question with a short topic name.' : '',
+    hasSource ? 'Set sourceFile to the file name the question came from.' : 'Set sourceFile to null.',
+  ].filter(Boolean).join('\n');
 }
