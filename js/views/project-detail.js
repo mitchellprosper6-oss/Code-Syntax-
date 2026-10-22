@@ -9,6 +9,9 @@ import {
 } from '../forms.js';
 import { storeFiles, openFile, dropZone } from '../files.js';
 import { ACCEPT } from '../extract.js';
+import { setAssistant } from '../assistant.js';
+import { slimProject } from '../forms.js';
+import { openTimer } from '../timer.js';
 
 export async function render(el, { id }) {
   const p = await db.get('projects', id);
@@ -125,6 +128,18 @@ export async function render(el, { id }) {
     toast(`Attached ${recs.length} file${recs.length === 1 ? '' : 's'}.`);
   };
   dropZone(el.querySelector('#drop'), attach);
+
+  setAssistant({
+    key: `project:${id}`,
+    title: p.title,
+    data: { project: slimProject(p), progressPct: pct, focusAreas: focus, logged: p.log.slice(-10) },
+    questions: ['What should I work on next?', 'Am I on track for the deadline?', 'Help me structure the report'],
+    actions: [
+      { label: 'Break into tasks', icon: 'check', run: () => el.querySelector('[data-act=ai-tasks]')?.click() },
+      { label: 'Add marking criteria', icon: 'target', run: () => el.querySelector('[data-act=ai-crit]')?.click() },
+      { label: 'Work on this now', icon: 'timer', run: () => openTimer({ type: 'project', id, label: p.title }) },
+    ],
+  });
 
   bind(el, {
     edit: async () => (await editProject(p)) && rerender(),
