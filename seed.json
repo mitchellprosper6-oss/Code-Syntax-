@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "lists": {
+    "projectTypes": ["Coursework", "Project report", "Personal project"],
+    "examTypes": ["In-person quiz", "Test", "Exam"]
+  },
+  "sections": [
+    { "key": "code", "name": "Code", "subgroups": [] },
+    { "key": "design", "name": "Design", "subgroups": ["CAD & Simulation", "Drawing", "Design process"] },
+    { "key": "uni", "name": "Uni Work", "subgroups": [] },
+    { "key": "ml", "name": "Machine Learning", "subgroups": [] }
+  ],
+  "projects": [
+    {
+      "title": "Python JupyterHub coursework",
+      "module": "Computational and Mathematical Modelling",
+      "category": "uni",
+      "type": "Coursework",
+      "deadline": { "date": "2026-12-08", "tbc": false, "approxMonth": null },
+      "description": "Marking criteria to be added.",
+      "status": "not-started"
+    },
+    {
+      "title": "Engineering Design Assessment (project report)",
+      "module": "Engineering Design",
+      "category": "uni",
+      "type": "Project report",
+      "deadline": { "date": "2026-12-15", "tbc": false, "approxMonth": null },
+      "description": "Marking criteria to be added.",
+      "status": "not-started"
+    }
+  ],
+  "exams": [
+    {
+      "title": "In-person QM+ maths quiz",
+      "module": "Computational and Mathematical Modelling",
+      "category": "uni",
+      "type": "In-person quiz",
+      "date": { "date": null, "tbc": true, "approxMonth": "2027-01" },
+      "formatNotes": "January 2027, exact date TBC."
+    },
+    {
+      "title": "Materials Engineering test",
+      "module": "Materials Engineering",
+      "category": "uni",
+      "type": "Test",
+      "date": { "date": "2026-11-05", "tbc": false, "approxMonth": null }
+    }
+  ],
+  "skills": [
+    { "name": "Python", "section": "code", "phase": "p1", "landmarks": [
+      "Syntax, types, control flow, functions", "Files and errors", "NumPy and Matplotlib", "Jupyter notebooks", "pandas", "OOP", "Small project on GitHub"] },
+    { "name": "C++", "section": "code", "phase": "p2", "landmarks": [
+      "Compile and run, types, control flow", "Functions and references", "Pointers and memory", "Classes", "STL containers", "Small CLI project"] },
+    { "name": "SQL", "section": "code", "phase": "unset", "landmarks": [
+      "SELECT, WHERE, ORDER BY", "Aggregates and GROUP BY", "JOINs", "Subqueries and CTEs", "Design a schema with keys and normalisation", "Small database project (Python + SQLite)"] },
+    { "name": "Computer Science foundations", "section": "code", "phase": "unset", "landmarks": [
+      "Data representation and binary", "Data structures (arrays, linked lists, stacks, queues, trees, hash tables)", "Algorithms and Big-O", "Recursion", "Sorting and searching", "How computers work (CPU, memory, OS)", "Networking basics"] },
+    { "name": "Git", "section": "code", "phase": "ongoing", "landmarks": [
+      "init / commit / push", "Branches and merges", "Pull requests", "Resolving conflicts", "Clean history"] },
+
+    { "name": "SolidWorks", "section": "design", "subgroup": "CAD & Simulation", "phase": "unset", "landmarks": [
+      "Sketches and features (extrude, revolve, fillet)", "Part from a dimensioned drawing", "Assembly with mates", "2D drawing to BS 8888", "Configurations and design tables", "CSWA certification"] },
+    { "name": "Autodesk Inventor", "section": "design", "subgroup": "CAD & Simulation", "phase": "unset", "landmarks": [
+      "Sketches and parts", "Assemblies with constraints", "Drawings", "iParts / iLogic parametrics", "Stress analysis basics", "Autodesk certification (optional)"] },
+    { "name": "Fusion 360", "section": "design", "subgroup": "CAD & Simulation", "phase": "unset", "landmarks": [
+      "Parametric sketches and bodies", "Components and joints", "Drawings", "Rendering", "CAM or 3D-print a part", "Simulation or generative design study"] },
+    { "name": "Ansys (simulation)", "section": "design", "subgroup": "CAD & Simulation", "phase": "unset", "landmarks": [
+      "Geometry import and clean-up", "Meshing and mesh quality", "Static structural FEA with loads and supports", "Interpret results and check against hand calculations", "Modal or thermal analysis", "CFD basics (Fluent)"] },
+    { "name": "Hand drawing for engineering design", "section": "design", "subgroup": "Drawing", "phase": "ongoing", "quickLogMinutes": 120, "quickLogNote": "Drawing session", "landmarks": [
+      "Line weights and construction lines", "First-angle orthographic projection", "Isometric", "Sectional views", "Dimensioning", "Annotated design sheets for a real project"] },
+    { "name": "Hand drawing for product design", "section": "design", "subgroup": "Drawing", "phase": "ongoing", "quickLogMinutes": 120, "quickLogNote": "Drawing session", "landmarks": [
+      "1- and 2-point perspective", "Ellipses and cylinders", "Form and shading", "Exploded views", "Ideation sheets", "Presentation render"] },
+    { "name": "Design Thinking", "section": "design", "subgroup": "Design process", "phase": "unset", "landmarks": [
+      "Empathise (user research, interviews)", "Define (problem statement, personas)", "Ideate (divergent sketching, SCAMPER)", "Prototype (low-fidelity models)", "Test and iterate with users", "Full double-diamond case study for my portfolio"] },
+
+    { "name": "Computational and Mathematical Modelling", "section": "uni", "module": "Computational and Mathematical Modelling", "phase": "p1", "landmarks": [
+      "Python JupyterHub coursework submitted", "QM+ maths quiz completed", "Module topics (to add)"] },
+    { "name": "Engineering Design", "section": "uni", "module": "Engineering Design", "phase": "p1", "landmarks": [
+      "Engineering Design Assessment report submitted", "Module criteria (to add)"] },
+    { "name": "Materials Engineering", "section": "uni", "module": "Materials Engineering", "phase": "p1", "landmarks": [
+      "Materials Engineering test completed", "Module topics (to add)"] },
+
+    { "name": "Machine learning maths", "section": "ml", "phase": "p1", "landmarks": [
+      "Vectors and matrices", "Derivatives, partial derivatives, chain rule", "Probability and statistics", "Gradient descent by hand", "Derive linear regression", "Advanced ML maths (Phase 2)"] },
+    { "name": "Machine learning code", "section": "ml", "phase": "p1", "landmarks": [
+      "Linear regression from scratch in NumPy", "scikit-learn pipeline", "Train/test split and metrics", "Classification project", "Neural network basics (PyTorch)", "End-to-end project write-up"] }
+  ]
+}
