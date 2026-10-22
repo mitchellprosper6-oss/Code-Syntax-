@@ -5,9 +5,10 @@
 import { uid } from './util.js';
 
 const DB_NAME = 'tracker-db';
-const DB_VERSION = 1;
-export const STORES = ['projects', 'exams', 'files', 'tests', 'attempts', 'skills', 'sections', 'meta'];
-export const SCHEMA_VERSION = 1;
+const DB_VERSION = 2;
+// v2 added: cards (flashcards), sessions (study/focus time), plans (revision plans, id = examId)
+export const STORES = ['projects', 'exams', 'files', 'tests', 'attempts', 'skills', 'sections', 'meta', 'cards', 'sessions', 'plans'];
+export const SCHEMA_VERSION = 2;
 
 let dbPromise;
 

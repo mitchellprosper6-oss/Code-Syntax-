@@ -24,7 +24,7 @@ export async function applySeed(seed) {
   await db.putMany(
     'skills',
     seed.skills.map((s, i) => {
-      const { section, landmarks, quickLogMinutes, quickLogNote, ...rest } = s;
+      const { section, landmarks, quickLogMinutes, quickLogNote, dailyTargetMin, ...rest } = s;
       return stamp(
         newSkill({
           ...rest,
@@ -32,6 +32,7 @@ export async function applySeed(seed) {
           sectionId: secId[section],
           landmarks: landmarks.map(newLandmark),
           quickLog: { minutes: quickLogMinutes || 30, note: quickLogNote || 'Practice session' },
+          dailyTargetMin: dailyTargetMin || 0,
         })
       );
     })
@@ -39,6 +40,18 @@ export async function applySeed(seed) {
   await db.setMeta('lists', seed.lists);
   await db.setMeta('schemaVersion', db.SCHEMA_VERSION);
   await db.setMeta('seeded', today());
+}
+
+/** Upgrade data saved by older versions of the site. */
+export async function migrate() {
+  const v = (await db.getMeta('schemaVersion', 1)) || 1;
+  if (v < 2) {
+    // v2: daily practice targets (drawing skills default to 2 hours a day).
+    for (const s of await db.getAll('skills')) {
+      if (s.dailyTargetMin == null) await db.put('skills', { ...s, dailyTargetMin: s.quickLog?.minutes >= 120 ? s.quickLog.minutes : 0 });
+    }
+  }
+  if (v < db.SCHEMA_VERSION) await db.setMeta('schemaVersion', db.SCHEMA_VERSION);
 }
 
 // ---------- export ----------
@@ -90,6 +103,8 @@ export async function importAll(data) {
     if (s === 'files') rows = await Promise.all(rows.map(async (f) => ({ ...f, blob: f.blob ? await dataUrlToBlob(f.blob) : null })));
     await db.putMany(s, rows);
   }
+  await db.setMeta('schemaVersion', data.schemaVersion || 1);
+  await migrate();
   await db.setMeta('seeded', (await db.getMeta('seeded')) || today());
   // The backup was made at exportedAt, so that is effectively the latest export on this device too.
   await db.setMeta('lastExport', data.exportedAt || lastExport);
