@@ -5,7 +5,7 @@ import { esc, today } from './util.js';
 import { openDialog, toast } from './ui.js';
 import { icon } from './icons.js';
 import { md } from './md.js';
-import { apiEnabled, chatClaude, openInClaude } from './ai.js';
+import { apiEnabled, chatClaude, openInClaude, ACADEMIC_SOURCES } from './ai.js';
 
 let ctx = null;
 let thread = { key: null, messages: [] };
@@ -34,6 +34,7 @@ async function generalContext() {
 const SYSTEM = (data) =>
   `You are the study assistant inside my personal tracker (uni projects, exams, practice tests, skills). I'm a UK engineering student. Today is ${today()}.
 Use the context below when it helps. Be concise, practical and encouraging; use short Markdown (bullets, **bold** key terms). If you suggest a plan, make it concrete with times or steps.
+${ACADEMIC_SOURCES}
 Context (JSON):
 ${JSON.stringify(data, null, 2).slice(0, 60000)}`;
 

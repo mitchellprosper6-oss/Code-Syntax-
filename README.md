@@ -45,6 +45,11 @@ sent only to `api.anthropic.com`. It is never put in the repo or exports. All yo
 browser origin, so a script on any of them could read it. Don't use it on shared computers. Direct mode uses
 Claude Opus 5.5 by default (Sonnet 5.5 and Haiku 5.5 are options), with Anthropic's server-side fallback enabled.
 
+**Sources:** every AI request tells Claude to use your Obsidian notes, QMplus (Queen Mary's Moodle) and reliable
+online academic sources (textbooks, university pages, journals, professional/standards bodies), never blogs, forums or
+homework-answer sites, and to name its sources. On claude.ai it can use whatever you have connected there (web search,
+Claude in Chrome on QMplus). With an API key, the site turns on Claude's web search, with forums and social sites blocked.
+
 AI output never saves itself: it fills a form, or shows suggestions to tick, or offers *Add to notes*.
 Practice-question JSON is documented in [docs/QUESTION_SCHEMA.md](docs/QUESTION_SCHEMA.md).
 

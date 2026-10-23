@@ -132,18 +132,29 @@ export function cleanFieldValues(fields, obj) {
   return out;
 }
 
-const INTRO = 'You are helping me (a UK engineering student) with my personal tracker for uni projects, exams, practice tests and skills.';
+const INTRO = 'You are helping me (a UK engineering student at Queen Mary University of London) with my personal tracker for uni projects, exams, practice tests and skills.';
+
+/** Where Claude should get its information from. Added to every AI prompt and the assistant. */
+export const ACADEMIC_SOURCES = [
+  'When generating your reply, use these sources:',
+  '1. My Obsidian notes (my personal study vault). Use any notes included here, and if you can access my Obsidian vault, search it for this module and topic.',
+  '2. QMplus (Queen Mary University of London\'s Moodle): my module pages, lecture slides, learning outcomes, handbooks and past papers. Use any QMplus content included here, and if you can open QMplus in my browser (e.g. Claude in Chrome), check this module\'s page.',
+  '3. Reliable online academic sources: standard textbooks, university course pages and lecture notes (.ac.uk / .edu), peer-reviewed journals, and professional or standards bodies (e.g. IMechE, IOM3, IET, IOP, BSI/ISO). Search the web for these when it helps.',
+  'Do not use blogs, forums, social media, homework-answer sites or unattributed web pages. Where my course material and other sources differ, follow my course material and point out the difference.',
+  'Name the source for anything not from my own notes or QMplus, and say when you are unsure rather than guessing.',
+].join('\n');
 
 export function buildPrompt({ about, instructions = '', context, request, schema, mode = 'json' }) {
   return [
     INTRO,
     `Task: ${about}`,
+    ACADEMIC_SOURCES,
     `Today's date is ${today()}.`,
     instructions,
     context ? `Context (JSON):\n${JSON.stringify(context, null, 2)}` : '',
     request ? `My request:\n"""\n${request}\n"""` : '',
     mode === 'json'
-      ? 'Reply with ONLY one JSON object (no prose, no code fences) that matches this JSON Schema. Use null for anything you cannot reasonably work out. Dates are YYYY-MM-DD.\n' + JSON.stringify(schema, null, 2)
+      ? 'Reply with ONLY one JSON object (no prose, no code fences) that matches this JSON Schema; mention sources only inside text fields where they fit. Use null for anything you cannot reasonably work out. Dates are YYYY-MM-DD.\n' + JSON.stringify(schema, null, 2)
       : 'Reply in Markdown (headings, bullet points, **bold** key terms). Be accurate and concrete. No preamble.',
   ]
     .filter(Boolean)
@@ -158,12 +169,27 @@ async function client() {
   return { Anthropic, c: new Anthropic({ apiKey, dangerouslyAllowBrowser: true }) };
 }
 
-function send(c, params) {
+// Sites that are not suitable academic sources (forums, social media, homework-answer sites).
+const BLOCKED_DOMAINS = ['reddit.com', 'quora.com', 'medium.com', 'facebook.com', 'x.com', 'twitter.com', 'tiktok.com', 'instagram.com', 'pinterest.com', 'chegg.com', 'coursehero.com', 'brainly.com', 'studocu.com', 'answers.com'];
+
+/** Send a request; with web: true Claude may search reliable online sources. Continues paused web-search turns. */
+async function send(c, { web = false, ...params }) {
   const model = getSetting('aiModel', 'claude-opus-5-5');
-  const p = { model, max_tokens: 16000, ...params };
-  // Server-side fallback re-runs a declined request on another model (not offered for Haiku).
-  if (model === 'claude-haiku-5-5') return c.messages.create(p);
-  return c.beta.messages.create({ ...p, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
+  const tools = web ? [{ type: model === 'claude-haiku-5-5' ? 'web_search_20250305' : 'web_search_20260209', name: 'web_search', max_uses: 5, blocked_domains: BLOCKED_DOMAINS }] : undefined;
+  const create = (messages) => {
+    const p = { model, max_tokens: 16000, ...params, messages, ...(tools ? { tools } : {}) };
+    // Server-side fallback re-runs a declined request on another model (not offered for Haiku).
+    if (model === 'claude-haiku-5-5') return c.messages.create(p);
+    return c.beta.messages.create({ ...p, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
+  };
+  let messages = params.messages;
+  let res;
+  for (let i = 0; i < 4; i++) {
+    res = await create(messages);
+    if (res.stop_reason !== 'pause_turn') return res;
+    messages = [...messages, { role: 'assistant', content: res.content }];
+  }
+  return res;
 }
 
 function textOf(res) {
@@ -182,20 +208,37 @@ function explainApiError(err, Anthropic) {
 }
 
 /** One-shot call. mode 'json' asks for structured output matching schema. Returns text. */
-export async function callClaude(prompt, schema, mode = 'json') {
+export async function callClaude(prompt, schema, mode = 'json', { web = true } = {}) {
   const { Anthropic, c } = await client();
-  const go = (withFormat) =>
-    send(c, {
-      messages: [{ role: 'user', content: prompt }],
-      output_config: { effort: 'medium', ...(withFormat ? { format: { type: 'json_schema', schema } } : {}) },
-    });
+  // Try the richest request first (structured output + web search), then step back if the API rejects a combination.
+  const tries = (mode === 'json' && schema ? [{ f: true, w: web }, { f: false, w: web }] : [{ f: false, w: web }]).concat(web ? [{ f: false, w: false }] : []);
+  let lastErr;
+  for (const t of tries) {
+    try {
+      return textOf(
+        await send(c, {
+          web: t.w,
+          messages: [{ role: 'user', content: prompt }],
+          output_config: { effort: 'medium', ...(t.f ? { format: { type: 'json_schema', schema } } : {}) },
+        })
+      );
+    } catch (err) {
+      lastErr = err;
+      if (!(err instanceof Anthropic.BadRequestError)) break;
+    }
+  }
+  throw explainApiError(lastErr, Anthropic);
+}
+
+/** Multi-turn chat for the assistant. messages: [{role, content}] */
+export async function chatClaude(messages, system) {
+  const { Anthropic, c } = await client();
   try {
-    return textOf(await go(mode === 'json' && !!schema));
+    return textOf(await send(c, { web: true, system, messages, output_config: { effort: 'low' } }));
   } catch (err) {
-    // If structured outputs rejects the schema, the prompt still carries it: retry without.
-    if (mode === 'json' && err instanceof Anthropic.BadRequestError && /schema|format/i.test(err.message)) {
+    if (err instanceof Anthropic.BadRequestError) {
       try {
-        return textOf(await go(false));
+        return textOf(await send(c, { system, messages, output_config: { effort: 'low' } }));
       } catch (e2) {
         throw explainApiError(e2, Anthropic);
       }
@@ -204,18 +247,8 @@ export async function callClaude(prompt, schema, mode = 'json') {
   }
 }
 
-/** Multi-turn chat for the assistant. messages: [{role, content}] */
-export async function chatClaude(messages, system) {
-  const { Anthropic, c } = await client();
-  try {
-    return textOf(await send(c, { system, messages, output_config: { effort: 'low' } }));
-  } catch (err) {
-    throw explainApiError(err, Anthropic);
-  }
-}
-
 export async function testConnection() {
-  const text = await callClaude('Reply with exactly: OK', null, 'text');
+  const text = await callClaude('Reply with exactly: OK', null, 'text', { web: false });
   return text.trim();
 }
 
