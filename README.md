@@ -60,6 +60,11 @@ Your data lives **only in the browser you use**. Laptop and iPhone each have the
 - On iPhone, add the site to your Home Screen (Share → Add to Home Screen) so Safari keeps the data, and still
   export regularly.
 
+## Look
+
+Royal dark theme by default: deep aubergine purple, crimson and gold, with square modules, chamfered corners and gold
+corner brackets. A parchment-and-gold light theme is in Settings → Appearance (or the sun/moon button).
+
 ## How it's built
 
 - Plain HTML, CSS and JavaScript (ES modules). There is no build step.
@@ -67,13 +72,13 @@ Your data lives **only in the browser you use**. Laptop and iPhone each have the
 - IndexedDB (`tracker-db`) holds records and files. localStorage holds small settings (`tracker-*` keys).
   All storage goes through [`js/db.js`](js/db.js). See [docs/DATA_MODEL.md](docs/DATA_MODEL.md).
 - Libraries load from jsDelivr only when first needed: Chart.js 4.4.1, pdf.js 3.11.174, mammoth.js 1.6.0,
-  and the Anthropic SDK 0.129.0 (direct AI mode only). Inter comes from Google Fonts, with a system-font fallback.
+  and the Anthropic SDK 0.129.0 (direct AI mode only). Fonts come from Google Fonts (EB Garamond for headings, Oswald for labels and numbers, Roboto for text), with system-font fallbacks.
 - `seed.json` holds the starting projects, exams and skills. It is loaded on the first visit only.
 
 ```
 index.html            app shell + nav
 seed.json             starting data
-css/                  base.css (tokens, layout), components.css, study.css
+css/                  base.css (colour tokens, layout), components.css, study.css, theme.css (royal geometric skin)
 js/app.js             start-up and routes
 js/db.js              data layer (only module that touches storage)
 js/model.js           calculations (completion %, readiness, levels…)

@@ -1,4 +1,5 @@
 import * as db from '../db.js';
+import { icon } from '../icons.js';
 import { projectProgress, taskProgress, focusItems, estimatedMark } from '../model.js';
 import { esc, countdown, urgency, daysUntil, hasDate, whenText, statusLabel, isClosed, fmtDate, fmtMinutes, fmtBytes, today, move, PROJECT_STATUSES, uid } from '../util.js';
 import { bind, catTag, progressBar, emptyState, formModal, confirmDialog, pickFiles, toast } from '../ui.js';
@@ -65,7 +66,7 @@ export async function render(el, { id }) {
 
     <section class="card mt" aria-labelledby="h-tasks">
       <div class="card-head"><h2 id="h-tasks">Tasks & milestones</h2>
-        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-tasks">✨ Suggest with AI</button><button class="btn btn-small btn-primary" data-act="add-task">+ Add task</button></div></div>
+        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-tasks">${icon('sparkles', 14)} Suggest with AI</button><button class="btn btn-small btn-primary" data-act="add-task">+ Add task</button></div></div>
       ${p.tasks.length ? `<ul class="list">${p.tasks.map((t, i) => `
         <li class="${t.done ? 'done' : ''}">
           <input type="checkbox" class="check" data-act="toggle-task" data-id="${t.id}" ${t.done ? 'checked' : ''} aria-label="Done: ${esc(t.name)}">
@@ -83,7 +84,7 @@ export async function render(el, { id }) {
 
     <section class="card mt" aria-labelledby="h-crit">
       <div class="card-head"><h2 id="h-crit">Marking criteria</h2>
-        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-crit">✨ Add from marking scheme</button><button class="btn btn-small btn-primary" data-act="add-crit">+ Add criterion</button></div></div>
+        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-crit">${icon('sparkles', 14)} Add from marking scheme</button><button class="btn btn-small btn-primary" data-act="add-crit">+ Add criterion</button></div></div>
       ${p.criteria.length ? `<div class="table-wrap"><table>
         <thead><tr><th>Criterion</th><th class="num">Weight</th><th>Self-rating</th><th>Notes</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>${p.criteria.map((c) => `<tr>

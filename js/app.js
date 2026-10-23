@@ -21,7 +21,7 @@ export const NAV = [
 ];
 const BOTTOM = ['#/', '#/projects', '#/exams', '#/study', '#/skills'];
 
-export function applyTheme(t = getSetting('theme', 'system')) {
+export function applyTheme(t = getSetting('theme', 'dark')) {
   if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
   const dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -69,7 +69,7 @@ function buildLayout() {
   document.addEventListener('click', () => setMenu(false));
 
   document.getElementById('theme-btn').addEventListener('click', () => {
-    const cur = getSetting('theme', 'system');
+    const cur = getSetting('theme', 'dark');
     const dark = cur === 'dark' || (cur === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
     setSetting('theme', dark ? 'light' : 'dark');
     applyTheme();

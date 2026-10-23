@@ -10,7 +10,7 @@ import { applyTheme } from '../app.js';
 
 export async function render(el) {
   const [lastExport, lists, est, persisted] = await Promise.all([db.getMeta('lastExport'), getLists(), db.storageEstimate(), db.isPersisted()]);
-  const theme = db.getSetting('theme', 'system');
+  const theme = db.getSetting('theme', 'dark');
   const aiOn = db.getSetting('aiApiEnabled', false);
   const key = db.getSetting('apiKey', '');
   const model = db.getSetting('aiModel', 'claude-opus-5-5');
@@ -30,7 +30,7 @@ export async function render(el) {
       <section class="card" aria-labelledby="h-look">
         <h2 id="h-look">Appearance</h2>
         <div class="field"><label for="theme">Theme</label>
-          <select id="theme" data-act="theme">${[['system', 'Match my device'], ['light', 'Light'], ['dark', 'Dark']].map(([v, l]) => `<option value="${v}" ${theme === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+          <select id="theme" data-act="theme">${[['dark', 'Royal dark (purple, crimson, gold)'], ['light', 'Parchment light'], ['system', 'Match my device']].map(([v, l]) => `<option value="${v}" ${theme === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
         <h2 class="mt">Storage</h2>
         <p class="small">${est ? `Using about ${fmtBytes(est.usage || 0)}${est.quota ? ` of ${fmtBytes(est.quota)} available` : ''}.` : 'Storage usage unavailable.'}
           ${persisted ? 'Storage is marked <strong>persistent</strong>, so the browser should not clear it.' : 'Storage is not marked persistent; the browser may clear it if space runs low.'}</p>

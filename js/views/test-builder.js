@@ -1,4 +1,5 @@
 import * as db from '../db.js';
+import { icon } from '../icons.js';
 import { newTopic } from '../model.js';
 import { esc, move, kindLabel, QUESTION_KINDS, uid } from '../util.js';
 import { bind, emptyState, formModal, confirmDialog, toast, openDialog, alertDialog } from '../ui.js';
@@ -71,7 +72,7 @@ export async function render(el, { id }) {
         ${QUESTION_KINDS.map((k) => `<button class="btn" data-act="add" data-kind="${k.id}">+ ${k.label}</button>`).join('')}
       </div>
       <div class="row-wrap mt">
-        <button class="btn btn-ai" data-act="generate">✨ Generate questions from my files</button>
+        <button class="btn btn-ai" data-act="generate">${icon('sparkles', 14)} Generate questions from my files</button>
         <span class="small muted">Builds a prompt from your file text; paste Claude's JSON reply back. <a href="https://github.com/mitchellprosper6-oss/Code-Syntax-/blob/main/docs/QUESTION_SCHEMA.md" target="_blank" rel="noopener">Schema</a></span>
       </div>
     </section>

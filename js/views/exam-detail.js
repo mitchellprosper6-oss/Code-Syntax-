@@ -66,7 +66,7 @@ export async function render(el, { id }) {
 
     <section class="card mt" aria-labelledby="h-topics">
       <div class="card-head"><h2 id="h-topics">Topics</h2>
-        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-topics">✨ Suggest with AI</button><button class="btn btn-small" data-act="bulk">Add several</button><button class="btn btn-small" data-act="weak-cards" title="Generate flashcards for the first weak topic without cards">${icon('cards', 14)} Cards for weak topics</button></div></div>
+        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-topics">${icon('sparkles', 14)} Suggest with AI</button><button class="btn btn-small" data-act="bulk">Add several</button><button class="btn btn-small" data-act="weak-cards" title="Generate flashcards for the first weak topic without cards">${icon('cards', 14)} Cards for weak topics</button></div></div>
       <form class="inline-form" data-form="add-topic" style="margin-bottom:.75rem">
         <label class="sr-only" for="new-topic">New topic</label>
         <input id="new-topic" name="name" placeholder="New topic, e.g. Phase diagrams" autocomplete="off">

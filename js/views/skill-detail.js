@@ -95,7 +95,7 @@ export async function render(el, { id }) {
 
     <section class="card mt" aria-labelledby="h-lm">
       <div class="card-head"><h2 id="h-lm">Landmarks</h2>
-        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-lm">✨ Suggest with AI</button><button class="btn btn-small btn-primary" data-act="add-lm">+ Add landmark</button></div></div>
+        <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-lm">${icon('sparkles', 14)} Suggest with AI</button><button class="btn btn-small btn-primary" data-act="add-lm">+ Add landmark</button></div></div>
       <div class="spread small muted"><span>${s.landmarks.filter((l) => l.done).length}/${s.landmarks.length} reached</span><span>${Math.round(pct)}%</span></div>
       ${progressBar(pct, { label: 'Landmarks reached' })}
       ${s.landmarks.length ? `<ol class="list mt">${s.landmarks.map((l, i) => `<li class="${l.done ? 'done' : ''}">
@@ -137,7 +137,7 @@ export async function render(el, { id }) {
       <div class="stack">
         <section class="card" aria-labelledby="h-res">
           <div class="card-head"><h2 id="h-res">Resources</h2>
-            <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-res">✨ Suggest</button><button class="btn btn-small btn-primary" data-act="add-res">+ Add</button></div></div>
+            <div class="row-wrap"><button class="btn btn-ai btn-small" data-act="ai-res">${icon('sparkles', 14)} Suggest</button><button class="btn btn-small btn-primary" data-act="add-res">+ Add</button></div></div>
           ${s.resources.length ? `<ul class="list">${s.resources.map((r) => `<li><div class="grow"><span class="tag">${esc(r.kind)}</span> ${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>` : `<span class="title">${esc(r.title)}</span>`}${r.notes ? `<br><span class="small muted">${esc(r.notes)}</span>` : ''}</div>
             <div class="actions"><button class="icon-btn" data-act="edit-res" data-id="${r.id}" aria-label="Edit resource">✎</button><button class="icon-btn danger" data-act="del-res" data-id="${r.id}" aria-label="Delete resource">✕</button></div></li>`).join('')}</ul>`
           : `<p class="muted small">Courses, books, videos, links and software tutorials.</p>`}
