@@ -137,7 +137,8 @@ first session is Learn, later ones Review, and the last day is a Mock test. Rebu
 and past sessions.
 
 ### `sections`
-`{id, key?, name, order, subgroups: string[]}`. Seeded with Code, Design, Uni Work, Machine Learning.
+`{id, key?, name, order, subgroups: string[]}`. Seeded with Code, Design, Uni Work, Machine Learning and
+Computational Modelling.
 
 ### `meta` (key/value, keyPath `key`)
 | Key | Value |
@@ -146,6 +147,7 @@ and past sessions.
 | `schemaVersion` | `2`. Older data is upgraded on start-up (`migrate()` in `js/backup.js`). |
 | `lastExport` | ISO timestamp of the last export. Drives the 14-day reminder. |
 | `lists` | `{ projectTypes: string[], examTypes: string[] }` |
+| `skillPacks` | Ids of the skill packs already applied in this browser (see below). |
 
 ## localStorage (per device, not in backups)
 | Key | Value |
@@ -169,3 +171,22 @@ names, then replaces all data. The API key and other localStorage settings are n
 ## Seed
 `seed.json` is loaded once, on the first visit (when `meta.seeded` is not set). It uses a compact format
 (landmarks as plain strings, sections by `key`) that `applySeed` in `js/backup.js` expands into full records.
+
+## Skill packs
+Skills added after the first seed live in [`js/skill-packs.js`](../js/skill-packs.js), in the same compact format
+plus `aliases`. On start-up (and after an import), `applySkillPacks` runs each pack whose id isn't in
+`meta.skillPacks` yet:
+
+- Missing sections are created (matched by `key`, then by name) and missing sub-groups are added.
+  `renameSubgroups` renames a sub-group and moves its skills with it.
+- A skill is added only if no skill in any section has the same name or one of its aliases
+  (case, spaces, punctuation and "(…)" notes are ignored). Existing skills are never changed.
+- A tracker with no sections and no skills (after *Delete all data*) is left empty.
+- `seed.json` already includes every pack, so a fresh start or *Reset to starting data* marks them all as done.
+
+Every piece of software is its own skill (SolidWorks, Inventor, Fusion 360, Ansys, MATLAB, Simulink, Abaqus,
+HyperMesh…), even when two tools do similar jobs.
+
+| Pack | Adds |
+|---|---|
+| `2026-11-skills` | Renames Design → *CAD & Simulation* to *CAD design*. Adds Drawing; Ansys, Fusion 360, SolidWorks and Autodesk Inventor (if missing); a **Computational Modelling** section with Computational modelling, Python for engineering modelling, Jupyter Notebook, MATLAB, Simulink, Abaqus and Simcenter HyperMesh (Altair); and Machine learning maths, code and concepts. |
