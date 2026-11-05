@@ -180,7 +180,7 @@ plus `aliases`. On start-up (and after an import), `applySkillPacks` runs each p
 - Missing sections are created (matched by `key`, then by name) and missing sub-groups are added.
   `renameSubgroups` renames a sub-group and moves its skills with it.
 - A skill is added only if no skill in any section has the same name or one of its aliases
-  (case, spaces, punctuation and "(…)" notes are ignored). Existing skills are never changed.
+  (case, spaces, punctuation and "(…)" notes are ignored, but + and # are kept so C, C++ and C# stay different). Existing skills are never changed.
 - A tracker with no sections and no skills (after *Delete all data*) is left empty.
 - `seed.json` already includes every pack, so a fresh start or *Reset to starting data* marks them all as done.
 
@@ -191,3 +191,7 @@ HyperMesh…), even when two tools do similar jobs.
 |---|---|
 | `2026-11-skills` | Renames Design → *CAD & Simulation* to *CAD design*. Adds Drawing; Ansys, Fusion 360, SolidWorks and Autodesk Inventor (if missing); a **Computational Modelling** section with Computational modelling, Python for engineering modelling, Jupyter Notebook, MATLAB, Simulink, Abaqus and Simcenter HyperMesh (Altair); and Machine learning maths, code and concepts. |
 | `2026-11-robotics` | A **Robotics** section for entry-level robotics. Electronics: Electronics fundamentals, Sensors, KiCad (PCB design). Motors & movement: Motors & actuators, Robot kinematics, Control systems (PID). Embedded systems: Arduino, Embedded C/C++, Raspberry Pi. Robot software: ROS 2, OpenCV (computer vision). Build projects: Robot build projects. |
+| `2026-11-c-and-product-design` | **C** (Code) and **Product design** (Design → Design process), so every folder in the Skills Obsidian vault has a matching skill. |
+
+The Skills Obsidian vault (`Documents/Skills` on the laptop) mirrors these sections, sub-groups and skills as folders,
+one hub note per skill (`00 <Skill>.md`). Uni Work has no folders there; its notes stay in the Design Engineering vault.

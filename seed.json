@@ -70,6 +70,8 @@
       "Syntax, types, control flow, functions", "Files and errors", "NumPy and Matplotlib", "Jupyter notebooks", "pandas", "OOP", "Small project on GitHub"] },
     { "name": "C++", "section": "code", "phase": "p2", "landmarks": [
       "Compile and run, types, control flow", "Functions and references", "Pointers and memory", "Classes", "STL containers", "Small CLI project"] },
+    { "name": "C", "section": "code", "phase": "p2", "landmarks": [
+      "Compile with warnings on (clang/gcc -Wall -Wextra) and understand the build steps", "Types, sizes and representation", "Functions and the header/source split", "Build with a Makefile", "Pointers and pass-by-reference", "Arrays and strings (char arrays)", "Dynamic memory (malloc/free) with no leaks", "Data structures with manual memory (linked list, BST)", "Multi-file C project on GitHub"] },
     { "name": "SQL", "section": "code", "phase": "unset", "landmarks": [
       "SELECT, WHERE, ORDER BY", "Aggregates and GROUP BY", "JOINs", "Subqueries and CTEs", "Design a schema with keys and normalisation", "Small database project (Python + SQLite)"] },
     { "name": "Computer Science foundations", "section": "code", "phase": "unset", "landmarks": [
@@ -93,6 +95,8 @@
       "1- and 2-point perspective", "Ellipses and cylinders", "Form and shading", "Exploded views", "Ideation sheets", "Presentation render"] },
     { "name": "Design Thinking", "section": "design", "subgroup": "Design process", "phase": "unset", "landmarks": [
       "Empathise (user research, interviews)", "Define (problem statement, personas)", "Ideate (divergent sketching, SCAMPER)", "Prototype (low-fidelity models)", "Test and iterate with users", "Full double-diamond case study for my portfolio"] },
+    { "name": "Product design", "section": "design", "subgroup": "Design process", "phase": "unset", "landmarks": [
+      "First principles of product design", "Research and problem framing", "Ideation and concept selection (decision matrix)", "Prototype, test and validate", "Aesthetics, form language and CMF", "Ergonomics and human factors", "Materials, manufacturing and DFMA", "Cost, value, lifecycle and sustainability", "Case study of a classic product"] },
 
     { "name": "Computational and Mathematical Modelling", "section": "uni", "module": "Computational and Mathematical Modelling", "phase": "p1", "landmarks": [
       "Python JupyterHub coursework submitted", "QM+ maths quiz completed", "Module topics (to add)"] },

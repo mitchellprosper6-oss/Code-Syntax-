@@ -185,13 +185,32 @@ export const SKILL_PACKS = [
         'Remote-controlled robot (Bluetooth or Wi-Fi)', 'ROS 2 mobile robot', 'Portfolio write-up with video'] },
     ],
   },
+
+  {
+    id: '2026-11-c-and-product-design',
+    // Skills that match notes already in the Skills vault (Code/C and Design/Design process/Product design).
+    sections: [
+      { key: 'code', name: 'Code', subgroups: [] },
+      { key: 'design', name: 'Design', subgroups: ['CAD design', 'Drawing', 'Design process'] },
+    ],
+    skills: [
+      { name: 'C', aliases: ['C programming', 'C language'], section: 'code', phase: 'p2', landmarks: [
+        'Compile with warnings on (clang/gcc -Wall -Wextra) and understand the build steps', 'Types, sizes and representation',
+        'Functions and the header/source split', 'Build with a Makefile', 'Pointers and pass-by-reference', 'Arrays and strings (char arrays)',
+        'Dynamic memory (malloc/free) with no leaks', 'Data structures with manual memory (linked list, BST)', 'Multi-file C project on GitHub'] },
+      { name: 'Product design', aliases: ['Product design process', 'Industrial design'], section: 'design', subgroup: 'Design process', phase: 'unset', landmarks: [
+        'First principles of product design', 'Research and problem framing', 'Ideation and concept selection (decision matrix)',
+        'Prototype, test and validate', 'Aesthetics, form language and CMF', 'Ergonomics and human factors',
+        'Materials, manufacturing and DFMA', 'Cost, value, lifecycle and sustainability', 'Case study of a classic product'] },
+    ],
+  },
 ];
 
-/** Lower-case, drop "(…)" notes and anything that isn't a letter or digit; modeling → modelling. */
+/** Lower-case, drop "(…)" notes and anything that isn't a letter, digit, + or #; modeling → modelling. */
 export function normName(s) {
   return String(s || '')
     .toLowerCase()
     .replace(/\(.*?\)/g, '')
     .replace(/modeling/g, 'modelling')
-    .replace(/[^a-z0-9]/g, '');
+    .replace(/[^a-z0-9+#]/g, ''); // keep + and # so C, C++ and C# stay different
 }
