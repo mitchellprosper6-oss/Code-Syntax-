@@ -193,5 +193,4 @@ HyperMesh…), even when two tools do similar jobs.
 | `2026-11-robotics` | A **Robotics** section for entry-level robotics. Electronics: Electronics fundamentals, Sensors, KiCad (PCB design). Motors & movement: Motors & actuators, Robot kinematics, Control systems (PID). Embedded systems: Arduino, Embedded C/C++, Raspberry Pi. Robot software: ROS 2, OpenCV (computer vision). Build projects: Robot build projects. |
 | `2026-11-c-and-product-design` | **C** (Code) and **Product design** (Design → Design process), so every folder in the Skills Obsidian vault has a matching skill. |
 
-The Skills Obsidian vault (`Documents/Skills` on the laptop) mirrors these sections, sub-groups and skills as folders,
-one hub note per skill (`00 <Skill>.md`). Uni Work has no folders there; its notes stay in the Design Engineering vault.
+The Skills Obsidian vault (`Documents/Skills` on the laptop) mirrors these sections, sub-groups and skills as folders, with one hub note per skill (`00 <Skill>.md`). Uni Work has no folders there: its notes stay in the Design Engineering vault.
