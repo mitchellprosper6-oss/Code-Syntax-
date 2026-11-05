@@ -138,7 +138,7 @@ and past sessions.
 
 ### `sections`
 `{id, key?, name, order, subgroups: string[]}`. Seeded with Code, Design, Uni Work, Machine Learning and
-Computational Modelling.
+Computational Modelling, and Robotics.
 
 ### `meta` (key/value, keyPath `key`)
 | Key | Value |
@@ -190,3 +190,4 @@ HyperMesh…), even when two tools do similar jobs.
 | Pack | Adds |
 |---|---|
 | `2026-11-skills` | Renames Design → *CAD & Simulation* to *CAD design*. Adds Drawing; Ansys, Fusion 360, SolidWorks and Autodesk Inventor (if missing); a **Computational Modelling** section with Computational modelling, Python for engineering modelling, Jupyter Notebook, MATLAB, Simulink, Abaqus and Simcenter HyperMesh (Altair); and Machine learning maths, code and concepts. |
+| `2026-11-robotics` | A **Robotics** section for entry-level robotics. Electronics: Electronics fundamentals, Sensors, KiCad (PCB design). Motors & movement: Motors & actuators, Robot kinematics, Control systems (PID). Embedded systems: Arduino, Embedded C/C++, Raspberry Pi. Robot software: ROS 2, OpenCV (computer vision). Build projects: Robot build projects. |

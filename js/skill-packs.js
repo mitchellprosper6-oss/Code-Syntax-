@@ -109,6 +109,82 @@ export const SKILL_PACKS = [
         'Data quality, bias and responsible AI'] },
     ],
   },
+
+  {
+    id: '2026-11-robotics',
+    // Entry-level robotics: the electronics, motors, movement and embedded coding side.
+    // CAD, design and the maths (matrices) are already covered in Design and Machine Learning.
+    sections: [
+      { key: 'robotics', name: 'Robotics', subgroups: ['Electronics', 'Motors & movement', 'Embedded systems', 'Robot software', 'Build projects'] },
+    ],
+    skills: [
+      // ---------- Electronics ----------
+      { name: 'Electronics fundamentals', aliases: ['Electronics', 'Basic electronics'], section: 'robotics', subgroup: 'Electronics', phase: 'unset',
+        resources: [{ kind: 'Book', title: 'All About Circuits textbook (free)', url: 'https://www.allaboutcircuits.com/textbook/', notes: 'DC, AC and semiconductor chapters.' }],
+        landmarks: [
+        "Voltage, current, resistance and Ohm's law", 'Series and parallel circuits, voltage dividers', 'Use a multimeter (volts, amps, continuity)',
+        'Build circuits on a breadboard', 'Components: resistors, capacitors, diodes, LEDs, transistors (MOSFETs)',
+        'Read schematics and datasheets', 'Power: regulators, batteries and LiPo safety', 'Solder a kit and debug it'] },
+      { name: 'Sensors', aliases: ['Robot sensors', 'Sensors and actuators'], section: 'robotics', subgroup: 'Electronics', phase: 'unset', landmarks: [
+        'Digital vs analogue inputs; pull-up and pull-down resistors', 'Buttons, limit switches and debouncing', 'Distance sensors: ultrasonic and IR',
+        'Line sensors for a line follower', 'Rotary encoders for speed and position', 'IMU: accelerometer and gyroscope',
+        'Filter noisy readings (moving average, complementary filter)', 'Calibrate a sensor and log its data'] },
+      { name: 'KiCad (PCB design)', aliases: ['KiCad', 'PCB design'], section: 'robotics', subgroup: 'Electronics', phase: 'unset',
+        resources: [{ kind: 'Link', title: 'KiCad documentation', url: 'https://docs.kicad.org/', notes: 'Official docs and Getting Started guide.' }],
+        landmarks: [
+        'Draw a schematic with symbols', 'Assign footprints', 'Lay out and route a two-layer PCB', 'Design rule check (DRC) and 3D view',
+        'Export Gerbers and order a board', 'Assemble, solder and test your own PCB'] },
+
+      // ---------- Motors & movement ----------
+      { name: 'Motors & actuators', aliases: ['Motors', 'Actuators', 'Motors and actuators'], section: 'robotics', subgroup: 'Motors & movement', phase: 'unset', landmarks: [
+        'DC motors: torque, speed and current', 'Drive a motor with an H-bridge driver (e.g. TB6612, L298N)', 'PWM speed and direction control',
+        'Servo motors: position control', 'Stepper motors with a driver (e.g. A4988)', 'Gearing: choose a motor for a load',
+        'Closed-loop speed or position control with an encoder'] },
+      { name: 'Robot kinematics', aliases: ['Kinematics', 'Robot motion'], section: 'robotics', subgroup: 'Motors & movement', phase: 'unset',
+        resources: [{ kind: 'Book', title: 'Modern Robotics (Lynch & Park, free online)', url: 'http://hades.mech.northwestern.edu/index.php/Modern_Robotics', notes: 'Free book, videos and code from Northwestern University.' }],
+        landmarks: [
+        'Coordinate frames and rotation matrices', 'Homogeneous transforms', 'Forward kinematics of a 2-link arm', 'Inverse kinematics of a 2-link arm',
+        'Denavit–Hartenberg (DH) parameters', 'Differential-drive kinematics and odometry', 'Velocity kinematics and the Jacobian (basics)'] },
+      { name: 'Control systems (PID)', aliases: ['PID control', 'Control systems', 'PID'], section: 'robotics', subgroup: 'Motors & movement', phase: 'unset', landmarks: [
+        'Open-loop vs closed-loop control', 'What P, I and D each do', 'Tune a PID loop for motor speed', 'PID position control (e.g. servo or arm joint)',
+        'Line follower with PID steering', 'Model and tune a controller in Simulink first', 'Self-balancing robot (IMU + PID)'] },
+
+      // ---------- Embedded systems ----------
+      { name: 'Arduino', aliases: ['Arduino IDE'], section: 'robotics', subgroup: 'Embedded systems', phase: 'unset',
+        resources: [{ kind: 'Link', title: 'Arduino documentation', url: 'https://docs.arduino.cc/', notes: 'Language reference, tutorials and board guides.' }],
+        landmarks: [
+        'Set up the IDE and upload Blink', 'digitalRead / digitalWrite with buttons and LEDs', 'analogRead and the serial monitor for debugging',
+        'PWM with analogWrite', 'Use libraries (servo, sensors, displays)', 'Non-blocking code with millis()',
+        'Hardware interrupts', 'Finished Arduino project with code on GitHub'] },
+      { name: 'Embedded C/C++', aliases: ['Embedded systems', 'Embedded programming', 'Embedded C', 'Embedded systems coding'], section: 'robotics', subgroup: 'Embedded systems', phase: 'unset', landmarks: [
+        'C/C++ on a microcontroller: memory limits, types and volatile', 'Bit manipulation and registers', 'GPIO without the Arduino library',
+        'Timers, PWM and interrupts (ISRs)', 'Communication: UART, I2C and SPI', 'State machines for robot behaviour',
+        'PlatformIO and a second board (ESP32 or STM32)', 'Debug with a logic analyser or debugger'] },
+      { name: 'Raspberry Pi', aliases: ['Raspberry Pi (Linux)'], section: 'robotics', subgroup: 'Embedded systems', phase: 'unset',
+        resources: [{ kind: 'Link', title: 'Raspberry Pi documentation', url: 'https://www.raspberrypi.com/documentation/', notes: 'Setup, Linux, GPIO and camera.' }],
+        landmarks: [
+        'Set up the OS and connect over SSH', 'Linux command-line basics', 'GPIO in Python (gpiozero)', 'Talk to an Arduino over serial',
+        'Camera module and image capture', 'Run a program at start-up', 'Pi as the "brain" of a robot'] },
+
+      // ---------- Robot software ----------
+      { name: 'ROS 2', aliases: ['ROS', 'Robot Operating System'], section: 'robotics', subgroup: 'Robot software', phase: 'unset',
+        resources: [{ kind: 'Link', title: 'ROS 2 documentation', url: 'https://docs.ros.org/', notes: 'Official install guides and beginner tutorials.' }],
+        landmarks: [
+        'Install ROS 2 (Ubuntu or WSL) and run the demos', 'Nodes, topics and messages', 'Write a publisher and subscriber in Python',
+        'Services, parameters and launch files', 'Describe a robot with URDF and view it in RViz', 'Simulate a robot in Gazebo',
+        'Control a real robot through ROS 2'] },
+      { name: 'OpenCV (computer vision)', aliases: ['OpenCV', 'Computer vision'], section: 'robotics', subgroup: 'Robot software', phase: 'unset',
+        resources: [{ kind: 'Link', title: 'OpenCV documentation', url: 'https://docs.opencv.org/', notes: 'Python tutorials (OpenCV-Python).' }],
+        landmarks: [
+        'Read, display and save images and video', 'Colour spaces and thresholding', 'Filtering and edge detection', 'Contours: find and track an object',
+        'Camera calibration', 'ArUco markers for position', 'Vision guiding a robot'] },
+
+      // ---------- Build projects ----------
+      { name: 'Robot build projects', aliases: ['Robotics projects', 'Robot projects'], section: 'robotics', subgroup: 'Build projects', phase: 'unset', landmarks: [
+        'Line-following robot', 'Obstacle-avoiding robot', '2- or 3-DOF servo arm (CAD + kinematics)', 'Self-balancing robot',
+        'Remote-controlled robot (Bluetooth or Wi-Fi)', 'ROS 2 mobile robot', 'Portfolio write-up with video'] },
+    ],
+  },
 ];
 
 /** Lower-case, drop "(…)" notes and anything that isn't a letter or digit; modeling → modelling. */
