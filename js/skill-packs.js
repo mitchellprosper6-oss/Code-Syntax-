@@ -2,6 +2,8 @@
 // Each pack runs once per browser (meta.skillPacks records which have run). A skill is only
 // added if no skill with the same name (or one of its aliases) exists in any section, so
 // existing skills, levels, landmarks and practice logs are never touched.
+// `moveSkills` moves an existing skill to another section or sub-group. Only its section and
+// sub-group change; its level, landmarks, logs and everything else stay as they are.
 //
 // Skills use the same compact format as seed.json, plus `aliases` for name matching.
 // Every piece of software is its own skill, even when two tools do similar jobs.
@@ -32,7 +34,8 @@ export const SKILL_PACKS = [
         'Light, shadow and tone to show form', 'Observational drawing from life (objects, people, places)',
         '30-day sketchbook streak', 'Finished portfolio piece'] },
 
-      { name: 'Ansys (simulation)', aliases: ['Ansys', 'Ansys Mechanical', 'Ansys Workbench'], section: 'design', subgroup: 'CAD design', phase: 'unset', landmarks: [
+      // Ansys is added straight into Computational Modelling (pack 2026-11-ansys-nx moved it there).
+      { name: 'Ansys (simulation)', aliases: ['Ansys', 'Ansys Mechanical', 'Ansys Workbench'], section: 'modelling', subgroup: 'Simulation software', phase: 'unset', landmarks: [
         'Geometry import and clean-up', 'Meshing and mesh quality', 'Static structural FEA with loads and supports',
         'Interpret results and check against hand calculations', 'Modal or thermal analysis', 'CFD basics (Fluent)'] },
       { name: 'Fusion 360', aliases: ['Autodesk Fusion', 'Autodesk Fusion 360', 'Fusion'], section: 'design', subgroup: 'CAD design', phase: 'unset', landmarks: [
@@ -202,6 +205,27 @@ export const SKILL_PACKS = [
         'First principles of product design', 'Research and problem framing', 'Ideation and concept selection (decision matrix)',
         'Prototype, test and validate', 'Aesthetics, form language and CMF', 'Ergonomics and human factors',
         'Materials, manufacturing and DFMA', 'Cost, value, lifecycle and sustainability', 'Case study of a classic product'] },
+    ],
+  },
+
+  {
+    id: '2026-11-ansys-nx',
+    // Ansys is simulation software, so it moves from Design → CAD design to Computational Modelling →
+    // Simulation software, next to Abaqus and HyperMesh. Siemens NX joins CAD design. Matches the Skills vault.
+    sections: [
+      { key: 'design', name: 'Design', subgroups: ['CAD design', 'Drawing', 'Design process'] },
+      { key: 'modelling', name: 'Computational Modelling', subgroups: ['Methods', 'Coding tools', 'Simulation software'] },
+    ],
+    // Moved only if the skill is still in the `from` section, so a skill placed elsewhere by hand stays put.
+    moveSkills: [
+      { name: 'Ansys (simulation)', aliases: ['Ansys', 'Ansys Mechanical', 'Ansys Workbench'], from: 'design', section: 'modelling', subgroup: 'Simulation software' },
+    ],
+    skills: [
+      { name: 'Siemens NX', aliases: ['NX', 'NX CAD', 'Unigraphics', 'Unigraphics NX'], section: 'design', subgroup: 'CAD design', phase: 'unset', landmarks: [
+        'Sketches, constraints and features in NX Modeling', 'Part from a dimensioned drawing',
+        'Assembly with constraints, and top-down design with WAVE links', 'Drawing to BS 8888 in NX Drafting',
+        'Synchronous technology: edit imported geometry', 'Expressions and part families',
+        'Simulation or CAM in NX (Simcenter 3D or NX CAM)'] },
     ],
   },
 ];

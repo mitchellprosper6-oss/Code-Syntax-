@@ -47,6 +47,7 @@ function expandSkill(s, sectionId, order) {
 /**
  * Add skill packs that haven't run in this browser yet. Only adds what's missing (matched by name
  * or alias across all sections), so existing skills and their progress are left exactly as they are.
+ * A pack's `moveSkills` changes only the section and sub-group of an existing skill.
  */
 export async function applySkillPacks() {
   const done = (await db.getMeta('skillPacks', [])) || [];
@@ -82,9 +83,20 @@ export async function applySkillPacks() {
         }
         secId[want.key] = sec.id;
       }
-      // 2. Skills that don't exist yet, in any section.
-      const have = new Set(skills.map((k) => normName(k.name)));
+      // 2. Existing skills that move to another section or sub-group. Nothing else about them changes.
       let order = Math.max(0, ...skills.map((k) => k.order ?? 0)) + 1;
+      for (const mv of pack.moveSkills || []) {
+        const names = [mv.name, ...(mv.aliases || [])].map(normName);
+        const to = secId[mv.section];
+        if (!to) continue;
+        for (const k of skills.filter((k) => names.includes(normName(k.name)))) {
+          if (mv.from && k.sectionId !== secId[mv.from]) continue;
+          if (k.sectionId === to && k.subgroup === mv.subgroup) continue;
+          Object.assign(k, await db.put('skills', { ...k, sectionId: to, subgroup: mv.subgroup, order: order++ }));
+        }
+      }
+      // 3. Skills that don't exist yet, in any section.
+      const have = new Set(skills.map((k) => normName(k.name)));
       for (const def of pack.skills) {
         const names = [def.name, ...(def.aliases || [])].map(normName);
         if (names.some((n) => have.has(n))) continue;
