@@ -34,7 +34,7 @@ export const SKILL_PACKS = [
         'Light, shadow and tone to show form', 'Observational drawing from life (objects, people, places)',
         '30-day sketchbook streak', 'Finished portfolio piece'] },
 
-      // Ansys is added straight into Computational Modelling (pack 2026-11-ansys-nx moved it there).
+      // Ansys is added straight into Computational Modelling (pack 2026-11-design-tools moved it there).
       { name: 'Ansys (simulation)', aliases: ['Ansys', 'Ansys Mechanical', 'Ansys Workbench'], section: 'modelling', subgroup: 'Simulation software', phase: 'unset', landmarks: [
         'Geometry import and clean-up', 'Meshing and mesh quality', 'Static structural FEA with loads and supports',
         'Interpret results and check against hand calculations', 'Modal or thermal analysis', 'CFD basics (Fluent)'] },
@@ -209,9 +209,11 @@ export const SKILL_PACKS = [
   },
 
   {
-    id: '2026-11-ansys-nx',
+    id: '2026-11-design-tools',
     // Ansys is simulation software, so it moves from Design → CAD design to Computational Modelling →
-    // Simulation software, next to Abaqus and HyperMesh. Siemens NX joins CAD design. Matches the Skills vault.
+    // Simulation software, next to Abaqus and HyperMesh. New Design tools: Siemens NX, Autodesk Alias
+    // (Class-A surfacing) and Blender (rendering and product placement) in CAD design, and Sketchbook
+    // (digital drawing; formerly Autodesk SketchBook) in Drawing. Matches the Skills vault.
     sections: [
       { key: 'design', name: 'Design', subgroups: ['CAD design', 'Drawing', 'Design process'] },
       { key: 'modelling', name: 'Computational Modelling', subgroups: ['Methods', 'Coding tools', 'Simulation software'] },
@@ -226,6 +228,13 @@ export const SKILL_PACKS = [
         'Assembly with constraints, and top-down design with WAVE links', 'Drawing to BS 8888 in NX Drafting',
         'Synchronous technology: edit imported geometry', 'Expressions and part families',
         'Simulation or CAM in NX (Simcenter 3D or NX CAM)'] },
+      { name: 'Autodesk Alias', aliases: ['Alias', 'Alias AutoStudio', 'Alias Surface', 'Alias Concept'], section: 'design', subgroup: 'CAD design', phase: 'unset', landmarks: [
+        'Interface, construction planes and NURBS curves (degree, spans, CVs)', 'Curves from a sketch, checked with curvature combs', 'Surfaces: rail, square, skin and boundary', 'Surface continuity (G0–G3) and highlight checks', 'Class-A surfacing of a consumer product shell', 'Hand-off to engineering CAD (STEP) and to rendering', 'Portfolio Class-A model to industry standard'] },
+      { name: 'Blender (rendering)', aliases: ['Blender', 'Blender 3D'], section: 'design', subgroup: 'CAD design', phase: 'unset', landmarks: [
+        'Bring CAD models into Blender: export, scale, units and shading clean-up', 'Physically based materials: metals, plastics, glass and rubber', 'Studio lighting with HDRIs and area lights', 'Cycles rendering: samples, denoising and colour management', 'Camera and composition for product shots', 'Product placement: put a product into a real photo or scene', 'Portfolio render set and turntable animation'] },
+      { name: 'Sketchbook (digital drawing)', aliases: ['Sketchbook', 'Autodesk SketchBook', 'SketchBook Pro'], section: 'design', subgroup: 'Drawing', phase: 'unset',
+        quickLogMinutes: 60, quickLogNote: 'Digital sketching session', landmarks: [
+        'Set up: stylus pressure, brushes, layers and blend modes', 'Perspective guides, ellipse and ruler tools', 'Clean line work with varied line weight', 'Marker-style tone, shadow and reflections', 'Material rendering: plastic, metal, glass and rubber', 'Digital ideation sheet', 'Product presentation board'] },
     ],
   },
 ];
